@@ -44,6 +44,13 @@ class Holding(Base):
     security_id = Column(Integer, ForeignKey("securities.id"))
     weight_pct = Column(Float, nullable=False)
     rationale = Column(String)
+    
+    @property
+    def ticker(self) -> str | None:
+        return self.security.ticker if self.security else None
+    @property
+    def name(self) -> str | None:
+        return self.security.name if self.security else None
 
     basket = relationship("Basket", back_populates="holdings")
     security = relationship("Security", back_populates="holdings")

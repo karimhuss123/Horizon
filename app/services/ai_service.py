@@ -12,7 +12,7 @@ You are an AI portfolio builder. Return STRICT JSON with:
 }
 Rules:
 - Max 10 holdings
-- Weights must sum to 1
+- Weights must sum to 100
 - Only include tickers that exist and match the user's constraints
 - No prose outside JSON
 """

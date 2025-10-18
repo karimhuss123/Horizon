@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from db.models import Basket, Holding, Security, BasketStatus
 
 class BasketsRepo:
@@ -46,7 +46,48 @@ class BasketsRepo:
         self.db.commit()
         self.db.refresh(basket)
         
+        return (
+            self.db.query(Basket)
+            .options(
+                selectinload(Basket.holdings).selectinload(Holding.security)
+            )
+            .get(data["id"] if "id" in data else basket.id)
+        )
+    
+    def get_all(self):
+        baskets = (
+            self.db.query(Basket)
+            .options(
+                selectinload(Basket.holdings).selectinload(Holding.security)
+            )
+            .order_by(Basket.id.desc())
+            .all()
+        )
+        return baskets, len(baskets)
+    
+    def get(self, id):
+        return (
+            self.db.query(Basket)
+            .filter_by(id=id)
+            .options(
+                selectinload(Basket.holdings).selectinload(Holding.security)
+            ).first()
+        )
+    
+    def accept_draft(self, id):
+        basket = self.get(id)
+        if not basket:
+            return None
+        basket.status = BasketStatus.ACCEPTED
+        self.db.commit()
+        self.db.refresh(basket)
         return basket
     
-    def get_all():
-        pass
+    def reject_draft(self, id):
+        basket = self.get(id)
+        if not basket:
+            return None
+        basket.status = BasketStatus.REJECTED
+        self.db.commit()
+        self.db.refresh(basket)
+        return basket
