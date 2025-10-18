@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Textarea Page</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <div class="bg-white shadow-md rounded-lg p-6 w-full max-w-md">
+    <h1 class="text-xl font-semibold mb-4">Your Message</h1>
+
+    <textarea id="message" placeholder="Type something..." 
+      class="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+      rows="6"></textarea>
+
+    <div class="flex justify-between items-center mt-4">
+      <button id="clearBtn" 
+        class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md">
+        Clear
+      </button>
+
+      <div class="flex gap-2">
+        <span id="counter" class="text-gray-500 text-sm self-center">0 characters</span>
+        <button id="submitBtn" 
+          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+          Submit
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const textarea = document.getElementById('message');
+    const counter = document.getElementById('counter');
+    const clearBtn = document.getElementById('clearBtn');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Update character counter
+    textarea.addEventListener('input', () => {
+      counter.textContent = `${textarea.value.length} characters`;
+    });
+
+    // Clear text area
+    clearBtn.addEventListener('click', () => {
+      textarea.value = '';
+      counter.textContent = '0 characters';
+    });
+
+    // Submit POST request to /generate
+    submitBtn.addEventListener('click', async () => {
+      const text = textarea.value.trim();
+      if (!text) {
+        alert('Please enter some text before submitting.');
+        return;
+      }
+
+      try {
+        const response = await fetch('/baskets/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userPrompt: text }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        alert('Response from server: ' + JSON.stringify(data));
+      } catch (error) {
+        console.error(error);
+        alert('Error sending request.');
+      }
+    });
+  </script>
+</body>
+</html>
