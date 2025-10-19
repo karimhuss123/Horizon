@@ -6,7 +6,7 @@ load_dotenv()
 
 class OpenAIClient:
     def __init__(self, model=None):
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
         self.model = model or os.getenv("OPENAI_MODEL", "gpt-4o-mini")
     
     def chat(self, messages, temperature):

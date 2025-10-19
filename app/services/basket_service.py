@@ -11,10 +11,15 @@ class BasketService:
     def generate_and_persist(self, user_prompt):
         if not self.ai:
             raise RuntimeError("AIService is not initialized for BasketService.")
-        
         data = self.ai.generate_basket_data(user_prompt)
         basket = self.baskets.create_draft_basket(data)
         return basket
+    
+    def regenerate(self, data):
+        if not self.ai:
+            raise RuntimeError("AIService is not initialized for BasketService.")
+        basket_data = self.ai.regenerate_basket_data(data)
+        return basket_data
 
     def get_all(self):
         baskets = self.baskets.get_all()
@@ -26,5 +31,8 @@ class BasketService:
     def accept_draft(self, id):
         return self.baskets.accept_draft(id)
     
-    def reject_draft(self, id):
-        return self.baskets.reject_draft(id)
+    def delete(self, id):
+        return self.baskets.delete(id)
+    
+    def edit(self, basket):
+        return self.baskets.update(basket)

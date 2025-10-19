@@ -28,8 +28,7 @@
         </div>
         <span id="basketStatus"
               class="text-xs px-2 py-1 rounded
-                     {% if basket.status == 'Accepted' %} bg-green-100 text-green-700
-                     {% elif basket.status == 'Rejected' %} bg-red-100 text-red-700
+                     {% if basket.status == 'Active' %} bg-green-100 text-green-700
                      {% else %} bg-gray-100 text-gray-700 {% endif %}">
           {{ basket.status or "Draft" }}
         </span>
@@ -66,19 +65,23 @@
       </p>
 
       <!-- Actions -->
-      {% if basket.status == 'Draft' %}
       <div class="mt-4 flex items-center gap-3">
+        {% if basket.status == 'Draft' %}
         <button id="acceptBtn"
           class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
           Accept
         </button>
-        <button id="rejectBtn"
+        {% endif %}
+        <button id="editBtn"
+          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+          Edit
+        </button>
+        <button id="deleteBtn"
           class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
-          Reject
+          Delete
         </button>
         <span id="actionStatus" class="text-sm text-gray-500"></span>
       </div>
-      {% endif %}
     </div>
   </div>
 
@@ -88,9 +91,10 @@
     const statusPill = document.getElementById('basketStatus');
     const actionStatus = document.getElementById('actionStatus');
     const acceptBtn = document.getElementById('acceptBtn');
-    const rejectBtn = document.getElementById('rejectBtn');
+    const editBtn = document.getElementById('editBtn');
+    const deleteBtn = document.getElementById('deleteBtn')
 
-    async function accept() {
+    async function acceptFn() {
         try {
             const res = await fetch(`/baskets/accept`, { 
                 method: 'POST',
@@ -105,23 +109,27 @@
         }
     }
 
-    async function reject() {
-        try {
-            const res = await fetch(`/baskets/reject`, { 
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ basket_id })
-            });
-            if (!res.ok) throw new Error(`Reject failed (${res.status})`)
-            window.location.href = `/`;
-        } catch (e) {
-            console.error(e);
-            actionStatus.textContent = 'Reject failed.';
-        }
+    async function deleteFn() {
+      if (!confirm('Are you sure you want to delete this basket? This action cannot be undone.')) {
+        return;
+      }
+      try {
+        const res = await fetch(`/baskets/delete`, { 
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ basket_id })
+        });
+        if (!res.ok) throw new Error(`Delete failed (${res.status})`)
+        window.location.href = `/`;
+      } catch (e) {
+        console.error(e);
+        actionStatus.textContent = 'Action failed.';
+      }
     }
 
-    acceptBtn.addEventListener('click', () => accept());
-    rejectBtn.addEventListener('click', () => reject());
+    if (acceptBtn){ acceptBtn.addEventListener('click', () => acceptFn()); }
+    deleteBtn.addEventListener('click', () => deleteFn());
+    editBtn.addEventListener('click', () => (window.location.href = `/baskets/edit?basket_id=${basket_id}`));
   </script>
 </body>
 </html>

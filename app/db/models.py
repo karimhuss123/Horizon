@@ -12,8 +12,7 @@ class RiskLevel(enum.Enum):
 
 class BasketStatus(enum.Enum):
     DRAFT = "Draft"
-    ACCEPTED = "Accepted"
-    REJECTED = "Rejected"
+    ACTIVE = "Active"
 
 class Basket(Base):
     __tablename__ = "baskets"

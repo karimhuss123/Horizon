@@ -10,11 +10,11 @@
 <body class="bg-gray-100 min-h-screen">
   <div class="max-w-4xl mx-auto p-6 space-y-6">
     <!-- Create box -->
-    <div class="bg-white shadow rounded p-6">
+    <div class="bg-gray-200 rounded-2xl p-4">
       <h1 class="text-2xl font-semibold mb-4">Create a Basket</h1>
 
       <textarea id="message" rows="4"
-        class="w-full border rounded p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="bg-slate-700 text-white rounded-2xl p-5 w-full border focus:outline-none focus:ring-2 focus:ring-blue-500"
         placeholder="Describe your idea..."></textarea>
 
       <div class="mt-3 flex items-center gap-3">
@@ -29,13 +29,11 @@
     <!-- Boards: always visible -->
     <div class="bg-gray-200 rounded-2xl p-4">
       <!-- Tabs -->
-      <div class="grid grid-cols-3 gap-4 mb-4">
-        <button data-filter="Accepted" id="tabAccepted"
-          class="tab-btn bg-white rounded-xl py-2 text-center font-medium">Accepted</button>
+      <div class="grid grid-cols-2 gap-4 mb-4">
+        <button data-filter="Active" id="tabActive"
+          class="tab-btn bg-white rounded-xl py-2 text-center font-medium">Active</button>
         <button data-filter="Draft" id="tabDraft"
           class="tab-btn bg-white rounded-xl py-2 text-center font-medium">Draft</button>
-        <button data-filter="Rejected" id="tabRejected"
-          class="tab-btn bg-white rounded-xl py-2 text-center font-medium">Rejected</button>
       </div>
 
       <!-- List area -->
@@ -61,7 +59,7 @@
 
     // --- State
     let allBaskets = [];
-    let activeFilter = 'Accepted'; // default tab
+    let activeFilter = 'Active'; // default tab
 
     // --- Helpers
     function setActiveTab(filter) {
@@ -75,7 +73,7 @@
 
     function renderList() {
       listEl.innerHTML = '';
-      const items = allBaskets.filter(b => (b.status || 'Accepted') === activeFilter);
+      const items = allBaskets.filter(b => (b.status || 'Active') === activeFilter);
 
       if (items.length === 0) {
         emptyEl.classList.remove('hidden');
@@ -139,34 +137,37 @@
     });
 
     submitBtn.addEventListener('click', async () => {
-      const user_prompt = textarea.value.trim();
-      if (!user_prompt) {
-        alert('Please enter a prompt.');
-        return;
-      }
+		const user_prompt = textarea.value.trim();
+		if (!user_prompt) {
+			alert('Please enter a prompt.');
+			return;
+		}
 
-      statusEl.textContent = 'Generating...';
+		submitBtn.textContent = 'Generating...';
+		submitBtn.disabled = true;
 
-      try {
-        const res = await fetch('/baskets/generate', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ user_prompt })
-        });
-        if (!res.ok) throw new Error(`Server error ${res.status}`);
-        await res.json();
+		try {
+			const res = await fetch('/baskets/generate', {
+			method: 'POST',
+			headers: {'Content-Type': 'application/json'},
+			body: JSON.stringify({ user_prompt })
+			});
+			if (!res.ok) throw new Error(`Server error ${res.status}`);
+			await res.json();
 
-        textarea.value = '';
-        statusEl.textContent = '';
+			textarea.value = '';
 
-        await fetchAllBaskets();
-        setActiveTab('Draft');
-        renderList();
-      } catch (err) {
-        console.error(err);
-        statusEl.textContent = 'Failed to generate.';
-        alert('Error generating basket.');
-      }
+			await fetchAllBaskets();
+			setActiveTab('Draft');
+			renderList();
+		} catch (err) {
+			console.error(err);
+			statusEl.textContent = 'Failed to generate.';
+			alert('Error generating basket.');
+		} finally {
+			submitBtn.textContent = 'Generate';
+			submitBtn.disabled = false;
+		}
     });
 
     setActiveTab(activeFilter);

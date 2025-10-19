@@ -7,9 +7,9 @@ class BasketsRepo:
     
     def create_draft_basket(self, data):
         basket = Basket(
-            name = data["basket_name"],
+            name = data["name"],
             prompt_text = data["user_prompt"],
-            description = data["thesis"],
+            description = data["description"],
             status = BasketStatus.DRAFT
         )
         
@@ -77,17 +77,57 @@ class BasketsRepo:
     def accept_draft(self, id):
         basket = self.get(id)
         if not basket:
-            return None
-        basket.status = BasketStatus.ACCEPTED
+            return RuntimeError("Basket does not exist.")
+        basket.status = BasketStatus.ACTIVE
         self.db.commit()
         self.db.refresh(basket)
         return basket
     
-    def reject_draft(self, id):
+    def delete(self, id):
         basket = self.get(id)
         if not basket:
-            return None
-        basket.status = BasketStatus.REJECTED
+            return RuntimeError("Basket does not exist.")
+        self.db.delete(basket)
         self.db.commit()
-        self.db.refresh(basket)
-        return basket
+        return
+    
+    def update(self, basket):
+        basket_obj = self.get(basket.id)
+        if not basket_obj:
+            raise RuntimeError("Basket does not exist.")
+        
+        basket_obj.name = basket.name
+        basket_obj.description = basket.description
+        basket_obj.status = BasketStatus(basket.status)
+        
+        basket_obj.holdings = []
+        
+        self.db.commit()
+        self.db.flush()
+        
+        for h in basket.holdings:
+            security = (
+                self.db.query(Security)
+                .filter(Security.ticker == h.ticker)
+                .one_or_none()
+            )
+
+            if not security:
+                security = Security(
+                    ticker=h.ticker,
+                    name=h.name
+                )
+                self.db.add(security)
+                self.db.flush()
+
+            holding = Holding(
+                basket_id=basket_obj.id,
+                security_id=security.id,
+                weight_pct=h.weight_pct,
+                rationale=h.rationale,
+            )
+            self.db.add(holding)
+
+        self.db.commit()
+        self.db.refresh(basket_obj)
+        return basket_obj
