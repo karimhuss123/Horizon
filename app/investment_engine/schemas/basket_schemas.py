@@ -3,8 +3,14 @@ from typing import List, Optional
 
 class HoldingIn(BaseModel):
     ticker: str = Field(..., min_length=1)
-    name: str = Field(..., min_length=1)
     weight_pct: float = Field(..., ge=0.01)
+    rationale: Optional[str] = None
+
+class HoldingOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+    ticker: Optional[str]
+    name: Optional[str]
+    weight_pct: float
     rationale: Optional[str] = None
 
 class BasketGenerateRequest(BaseModel):
@@ -15,6 +21,7 @@ class BasketRegenerateRequest(BaseModel):
     name: str = Field(..., min_length=1)
     description: Optional[str] = None
     holdings: List[HoldingIn] = Field(..., min_items=1)
+    user_prompt: str = Field(..., min_length=3)
     
     @model_validator(mode="after")
     def check_holdings_total_weight(self):
@@ -22,8 +29,6 @@ class BasketRegenerateRequest(BaseModel):
         if total != 100:
             raise ValueError(f"Holdings weight_pct must sum to 100 (got {total:.4f})")
         return self
-    
-    user_prompt: str = Field(..., min_length=3)
 
 class BasketStatusUpdateRequest(BaseModel):
     basket_id: int
@@ -45,17 +50,9 @@ class BasketUpdateRequest(BaseModel):
             raise ValueError(f"Holdings weight_pct must sum to 100 (got {total:.4f})")
         return self
 
-class HoldingOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
-    ticker: Optional[str]
-    name: Optional[str]
-    weight_pct: float
-    rationale: Optional[str] = None
-
 class BasketRegenerationResponse(BaseModel):
     name: str
     description: Optional[str] = None
-    status: Optional[str] = None
     holdings: List[HoldingOut]
 
 class BasketResponse(BaseModel):

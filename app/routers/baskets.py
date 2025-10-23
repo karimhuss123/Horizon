@@ -2,9 +2,9 @@ from fastapi import Request, APIRouter, Depends, status
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from db.db import get_db
-from services.basket_service import BasketService
-from services.ai_service import AIService
-from schemas.basket_schemas import (
+from investment_engine.services.basket_service import BasketService
+from investment_engine.services.ai_service import AIService
+from investment_engine.schemas.basket_schemas import (
     BasketRegenerateRequest,
     BasketResponse, 
     BasketGenerateRequest, 

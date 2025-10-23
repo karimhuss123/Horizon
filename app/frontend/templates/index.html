@@ -59,12 +59,16 @@
 
     // --- State
     let allBaskets = [];
-    let activeFilter = 'Active'; // default tab
+    
+    // --- Load saved tab on page load
+    const savedTab = localStorage.getItem('activeFilter');
+    let activeFilter = savedTab || 'Active'; // default tab if nothing saved
 
-    // --- Helpers
+    // --- Modify setActiveTab to save choice
     function setActiveTab(filter) {
-      activeFilter = filter;
-      tabBtns.forEach(btn => {
+        activeFilter = filter;
+        localStorage.setItem('activeFilter', filter); // <— Save choice
+        tabBtns.forEach(btn => {
         const isActive = btn.dataset.filter === filter;
         btn.classList.toggle('ring-2', isActive);
         btn.classList.toggle('ring-blue-500', isActive);
@@ -72,98 +76,94 @@
     }
 
     function renderList() {
-      listEl.innerHTML = '';
-      const items = allBaskets.filter(b => (b.status || 'Active') === activeFilter);
+        listEl.innerHTML = '';
+        const items = allBaskets.filter(b => (b.status || 'Active') === activeFilter);
 
-      if (items.length === 0) {
-        emptyEl.classList.remove('hidden');
-        return;
-      }
-      emptyEl.classList.add('hidden');
+        if (items.length === 0) {
+            emptyEl.classList.remove('hidden');
+            return;
+        }
+        emptyEl.classList.add('hidden');
 
-      items.forEach(b => {
-        const card = document.createElement('div');
-        card.className = 'bg-slate-700 text-white rounded-2xl p-5';
+        items.forEach(b => {
+            const card = document.createElement('div');
+            card.className = 'bg-slate-700 text-white rounded-2xl p-5';
 
-        const holdingsCount = Array.isArray(b.holdings) ? b.holdings.length : 0;
-        const desc = b.description || '';
+            const holdingsCount = Array.isArray(b.holdings) ? b.holdings.length : 0;
+            const desc = b.description || '';
 
-        card.innerHTML = `
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <div class="text-lg font-semibold">${b.name || 'Untitled Basket'}</div>
-              <div class="text-slate-200 mt-1 line-clamp-2">${desc}</div>
+            card.innerHTML = `
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                <div class="text-lg font-semibold">${b.name || 'Untitled Basket'}</div>
+                <div class="text-slate-200 mt-1 line-clamp-2">${desc}</div>
+                </div>
+                <div class="shrink-0 text-xs bg-slate-600 rounded px-2 py-1">
+                ${b.status || 'Draft'}
+                </div>
             </div>
-            <div class="shrink-0 text-xs bg-slate-600 rounded px-2 py-1">
-              ${b.status || 'Draft'}
+            <div class="mt-3 text-sm text-slate-200">
+                Holdings: <span class="font-medium">${holdingsCount}</span>
             </div>
-          </div>
-          <div class="mt-3 text-sm text-slate-200">
-            Holdings: <span class="font-medium">${holdingsCount}</span>
-          </div>
-        `;
+            `;
 
-        card.addEventListener('click', async () => {
-          const id = b.id;
-          if (!id) return;
-          window.location.href = `/baskets/details?basket_id=${encodeURIComponent(id)}`;
+            card.addEventListener('click', async () => {
+            const id = b.id;
+            if (!id) return;
+            window.location.href = `/baskets/details?basket_id=${encodeURIComponent(id)}`;
+            });
+
+            listEl.appendChild(card);
         });
-
-        listEl.appendChild(card);
-      });
     }
 
     async function fetchAllBaskets() {
-      try {
-        const res = await fetch('/baskets/get-all');
-        if (!res.ok) throw new Error(`GET /baskets/get-all -> ${res.status}`);
-        const data = await res.json();
-        // Expecting an array of baskets
-        allBaskets = Array.isArray(data) ? data : (data.items || []);
-        renderList();
-      } catch (e) {
-        console.error(e);
-        allBaskets = [];
-        renderList();
-      }
+        try {
+            const res = await fetch('/baskets/get-all');
+            if (!res.ok) throw new Error(`GET /baskets/get-all -> ${res.status}`);
+            const data = await res.json();
+            // Expecting an array of baskets
+            allBaskets = Array.isArray(data) ? data : (data.items || []);
+            renderList();
+        } catch (e) {
+            console.error(e);
+            allBaskets = [];
+            renderList();
+        }
     }
 
     // --- Events
     tabBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        setActiveTab(btn.dataset.filter);
-        renderList();
-      });
+        btn.addEventListener('click', () => {
+            setActiveTab(btn.dataset.filter);
+            renderList();
+        });
     });
 
     submitBtn.addEventListener('click', async () => {
 		const user_prompt = textarea.value.trim();
 		if (!user_prompt) {
-			alert('Please enter a prompt.');
+            statusEl.textContent = 'Please enter a prompt.';
 			return;
 		}
-
+        statusEl.textContent = '';
 		submitBtn.textContent = 'Generating...';
 		submitBtn.disabled = true;
-
 		try {
 			const res = await fetch('/baskets/generate', {
-			method: 'POST',
-			headers: {'Content-Type': 'application/json'},
-			body: JSON.stringify({ user_prompt })
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ user_prompt })
 			});
 			if (!res.ok) throw new Error(`Server error ${res.status}`);
 			await res.json();
-
 			textarea.value = '';
-
 			await fetchAllBaskets();
 			setActiveTab('Draft');
 			renderList();
 		} catch (err) {
 			console.error(err);
 			statusEl.textContent = 'Failed to generate.';
-			alert('Error generating basket.');
 		} finally {
 			submitBtn.textContent = 'Generate';
 			submitBtn.disabled = false;

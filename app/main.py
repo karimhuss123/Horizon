@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from db.db import engine, Base, get_db
 from dotenv import load_dotenv
 from db.models import Basket, Holding, Security
-from api.routers import baskets, pages
+from routers import baskets, pages
 
 def create_app() -> FastAPI:
     load_dotenv()

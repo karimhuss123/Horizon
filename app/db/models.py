@@ -4,6 +4,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship, declarative_base
 import enum
 from db.db import Base
+from pgvector.sqlalchemy import Vector
 
 class RiskLevel(enum.Enum):
     LOW = "Low"
@@ -61,10 +62,12 @@ class Security(Base):
     id = Column(Integer, primary_key=True)
     ticker = Column(String, unique=True, nullable=False)
     name = Column(String, nullable=True)
-    # exchange = Column(String)
-    # country = Column(String)
-    # sector = Column(String)
-    # market_cap_usd = Column(Float)
-    # currency = Column(String)
-
+    description = Column(String)
+    description_embedding = Column(Vector(1536))
+    industry = Column(String)
+    currency = Column(String)
+    exchange = Column(String)
+    type = Column(String)
+    market_cap_usd = Column(Float)
+    
     holdings = relationship("Holding", back_populates="security")

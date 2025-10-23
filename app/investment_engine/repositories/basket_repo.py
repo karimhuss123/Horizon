@@ -7,39 +7,20 @@ class BasketsRepo:
     
     def create_draft_basket(self, data):
         basket = Basket(
-            name = data["name"],
             prompt_text = data["user_prompt"],
-            description = data["description"],
+            name = data["criteria"]["name"],
+            description = data["criteria"]["theme_summary"],
             status = BasketStatus.DRAFT
         )
-        
         self.db.add(basket)
         self.db.flush()
         
-        for h in data.get("holdings", []):
-            security = (
-                self.db.query(Security)
-                .filter(Security.ticker == h["ticker"])
-                .one_or_none()
-            )
-
-            if not security:
-                security = Security(
-                    ticker=h["ticker"],
-                    name=h["name"],
-                    # exchange=h.get("exchange"),
-                    # country=h.get("country"),
-                    # sector=h.get("sector"),
-                    # currency="USD",
-                )
-                self.db.add(security)
-                self.db.flush()
-
+        for h in data.get("holdings", []):            
             holding = Holding(
                 basket_id=basket.id,
-                security_id=security.id,
+                security_id=h["id"],
                 weight_pct=h["weight_pct"],
-                rationale=h.get("rationale"),
+                rationale=h["rationale"],
             )
             self.db.add(holding)
 
@@ -51,7 +32,7 @@ class BasketsRepo:
             .options(
                 selectinload(Basket.holdings).selectinload(Holding.security)
             )
-            .get(data["id"] if "id" in data else basket.id)
+            .get(basket.id)
         )
     
     def get_all(self):
@@ -96,38 +77,39 @@ class BasketsRepo:
         if not basket_obj:
             raise RuntimeError("Basket does not exist.")
         
-        basket_obj.name = basket.name
-        basket_obj.description = basket.description
-        basket_obj.status = BasketStatus(basket.status)
-        
-        basket_obj.holdings = []
-        
-        self.db.commit()
-        self.db.flush()
-        
-        for h in basket.holdings:
-            security = (
-                self.db.query(Security)
-                .filter(Security.ticker == h.ticker)
-                .one_or_none()
-            )
-
-            if not security:
-                security = Security(
-                    ticker=h.ticker,
-                    name=h.name
+        try:
+            basket_obj.name = basket.name
+            basket_obj.description = basket.description
+            basket_obj.status = BasketStatus(basket.status)
+            
+            self.db.commit()
+            self.db.flush()
+            
+            basket_obj.holdings = []
+            
+            for h in basket.holdings:
+                ticker = h.ticker
+                if not ticker:
+                    raise ValueError("Holding missing ticker.")
+                security = (
+                    self.db.query(Security)
+                    .filter(Security.ticker == ticker)
+                    .one_or_none()
                 )
-                self.db.add(security)
-                self.db.flush()
+                if not security:
+                    return RuntimeError(f'Ticker "{ticker}" does not exist.')
 
-            holding = Holding(
-                basket_id=basket_obj.id,
-                security_id=security.id,
-                weight_pct=h.weight_pct,
-                rationale=h.rationale,
-            )
-            self.db.add(holding)
+                holding = Holding(
+                    basket_id=basket_obj.id,
+                    security_id=security.id,
+                    weight_pct=h.weight_pct,
+                    rationale=h.rationale,
+                )
+                self.db.add(holding)
 
-        self.db.commit()
-        self.db.refresh(basket_obj)
-        return basket_obj
+            self.db.commit()
+            self.db.refresh(basket_obj)
+            return basket_obj
+        except Exception:
+            self.db.rollback()
+            raise
