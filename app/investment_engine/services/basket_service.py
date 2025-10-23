@@ -2,13 +2,13 @@ from sqlalchemy.orm import Session
 from investment_engine.services.ai_service import AIService
 from investment_engine.services.selector_service import SelectorService
 from investment_engine.services.theme_service import ThemeService
-from investment_engine.repositories.basket_repo import BasketsRepo
+from investment_engine.repositories.basket_repo import BasketRepo
 
 class BasketService:
     def __init__(self, db: Session, ai=None):
         self.db = db
         self.ai = ai
-        self.baskets = BasketsRepo(db)
+        self.baskets = BasketRepo(db)
     
     def generate_and_persist(self, user_prompt):
         if not self.ai:
@@ -16,7 +16,6 @@ class BasketService:
         selector_svc = SelectorService(self.db)
         theme_svc = ThemeService(self.db, self.ai.client)
         criteria = self.ai.generate_enriched_query(user_prompt)
-        print("CRITERIA:", criteria,"\n")
         candidate_securities_ids = selector_svc.screen(criteria)
         embedded_query = theme_svc.get_embedded_query(criteria)
         hits = theme_svc.vector_search_within_candidates(query_vec=embedded_query, candidate_ids=candidate_securities_ids)

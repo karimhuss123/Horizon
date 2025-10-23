@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session, selectinload
 from db.models import Basket, Holding, Security, BasketStatus
 
-class BasketsRepo:
+class BasketRepo:
     def __init__(self, db: Session):
         self.db = db
     

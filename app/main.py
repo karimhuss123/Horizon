@@ -4,13 +4,14 @@ from fastapi.staticfiles import StaticFiles
 from db.db import engine, Base, get_db
 from dotenv import load_dotenv
 from db.models import Basket, Holding, Security
-from routers import baskets, pages
+from routers import baskets, pages, securities
 
 def create_app() -> FastAPI:
     load_dotenv()
     app = FastAPI(title=os.getenv('APP_NAME'))
     app.include_router(baskets.router)
     app.include_router(pages.router)
+    app.include_router(securities.router)
     
     app.mount("/static", StaticFiles(directory="app/frontend/static"), name="static")
     Base.metadata.create_all(bind=engine)

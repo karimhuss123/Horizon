@@ -10,11 +10,11 @@
 <body class="bg-gray-100 min-h-screen">
   <div class="max-w-4xl mx-auto p-6 space-y-6">
     <!-- Create box -->
-    <div class="bg-gray-200 rounded-2xl p-4">
+    <div class="bg-white shadow rounded p-6">
       <h1 class="text-2xl font-semibold mb-4">Create a Basket</h1>
 
       <textarea id="message" rows="4"
-        class="bg-slate-700 text-white rounded-2xl p-5 w-full border focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="bg-gray-100 w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
         placeholder="Describe your idea..."></textarea>
 
       <div class="mt-3 flex items-center gap-3">
@@ -27,13 +27,13 @@
     </div>
 
     <!-- Boards: always visible -->
-    <div class="bg-gray-200 rounded-2xl p-4">
+    <div class="bg-white shadow rounded p-6">
       <!-- Tabs -->
       <div class="grid grid-cols-2 gap-4 mb-4">
         <button data-filter="Active" id="tabActive"
-          class="tab-btn bg-white rounded-xl py-2 text-center font-medium">Active</button>
+          class="tab-btn bg-green-100 text-green-700 rounded p-2 py-2 text-center font-medium">Active</button>
         <button data-filter="Draft" id="tabDraft"
-          class="tab-btn bg-white rounded-xl py-2 text-center font-medium">Draft</button>
+          class="tab-btn bg-gray-100 text-gray-700 rounded p-2 py-2 text-center font-medium">Draft</button>
       </div>
 
       <!-- List area -->
@@ -71,7 +71,11 @@
         tabBtns.forEach(btn => {
         const isActive = btn.dataset.filter === filter;
         btn.classList.toggle('ring-2', isActive);
-        btn.classList.toggle('ring-blue-500', isActive);
+        if (activeFilter === 'Active') {
+            btn.classList.toggle('ring-green-500', isActive);
+        } else {
+            btn.classList.toggle('ring-gray-500', isActive);
+        }
       });
     }
 
@@ -87,22 +91,26 @@
 
         items.forEach(b => {
             const card = document.createElement('div');
-            card.className = 'bg-slate-700 text-white rounded-2xl p-5';
+            card.className = 'bg-gray-100 w-full border rounded p-2';
 
             const holdingsCount = Array.isArray(b.holdings) ? b.holdings.length : 0;
             const desc = b.description || '';
+            const status = b.status || 'Draft';
+            const statusClass = status === 'Active'
+              ? 'bg-green-100 text-green-700'
+              : 'bg-gray-100 text-gray-700';
 
             card.innerHTML = `
             <div class="flex items-start justify-between gap-4">
                 <div>
                 <div class="text-lg font-semibold">${b.name || 'Untitled Basket'}</div>
-                <div class="text-slate-200 mt-1 line-clamp-2">${desc}</div>
+                <div class="text-gray-700 mt-1 line-clamp-2">${desc}</div>
                 </div>
-                <div class="shrink-0 text-xs bg-slate-600 rounded px-2 py-1">
+                <div class="shrink-0 text-xs bg-gray-300 rounded px-2 py-1">
                 ${b.status || 'Draft'}
                 </div>
             </div>
-            <div class="mt-3 text-sm text-slate-200">
+            <div class="mt-3 text-sm text-gray-700">
                 Holdings: <span class="font-medium">${holdingsCount}</span>
             </div>
             `;

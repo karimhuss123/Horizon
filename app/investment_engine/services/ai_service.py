@@ -74,7 +74,6 @@ class AIService:
         ]
         resp = self.client.chat(messages=messages, temperature=0)
         data = json.loads(resp)
-        print("DATA:", data)
         if isinstance(data, dict):
             for h in holdings:
                 h["rationale"] = data.get(h["ticker"], "")
