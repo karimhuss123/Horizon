@@ -7,7 +7,6 @@ from fastapi.responses import HTMLResponse
 from market_data.services.security_service import SecurityService
 from typing import List
 
-
 router = APIRouter(prefix="/securities", tags=["securities"])
 
 templates = Jinja2Templates(directory="app/frontend/templates")

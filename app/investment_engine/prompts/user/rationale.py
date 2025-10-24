@@ -28,6 +28,7 @@ For EACH holding, produce a short rationale (1–2 sentences, 20–40 words) tha
 - If information is sparse, keep the rationale general but still relevant (e.g., reference the company’s sector or market focus).
 - Keep tone factual, precise, and investor-oriented.
 - **Do NOT mention the “basket,” “theme,” or the idea of alignment or fit.** Write each rationale as an independent, factual statement about the company itself.
+- Tickers in the output **must be exactly the same** as the tickers in the provided list of holdings
 
 ## Output
 Return ONLY valid JSON as a single object.

@@ -1,21 +1,22 @@
 from openai import OpenAI
 from fastapi import HTTPException
-from dotenv import load_dotenv
-import os
-load_dotenv()
+from core.config import settings
 
 class OpenAIClient:
     def __init__(self, model=None, embeddings_model=None):
-        self.client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
-        self.model = model or os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-        self.embeddings_model = embeddings_model or os.getenv("OPENAI_EMBEDDINGS_MODEL", "text-embedding-3-small")
+        self.client = OpenAI(api_key=settings.OPENAI_KEY)
+        self.model = model or settings.OPENAI_CHAT_MODEL
+        self.embeddings_model = embeddings_model or settings.OPENAI_EMBEDDINGS_MODEL
     
-    def chat(self, messages, temperature):
-        resp = self.client.chat.completions.create(
+    def chat(self, messages, temperature, as_json=False):
+        kwargs = dict(
             model=self.model,
             messages=messages,
             temperature=temperature
         )
+        if as_json:
+            kwargs["response_format"] = {"type": "json_object"}
+        resp = self.client.chat.completions.create(**kwargs)
         return resp.choices[0].message.to_dict().get("content")
     
     def get_embeddings(self, string):
