@@ -30,8 +30,7 @@ Your task:
   "theme_summary": "2–3 sentences describing the refined basket’s focus and investment rationale using industry terminology.",
   "keywords": ["..."],
   "sectors": ["..."],
-  "regions_include": ["..."],
-  "regions_exclude": ["..."],
+  "regions": ["..."],
   "min_market_cap_usd": null,
   "max_market_cap_usd": null,
   "risk_preference": null
@@ -58,8 +57,7 @@ User prompt: "Focus more on AI-driven content creation and enterprise productivi
   "theme_summary": "Established software companies integrating artificial intelligence into creative, productivity, and enterprise experience platforms.",
   "keywords": ["AI software", "digital media", "creative automation", "enterprise applications", "cloud platforms", "content generation", "productivity tools"],
   "sectors": ["Technology", "Software", "Artificial Intelligence"],
-  "regions_include": [],
-  "regions_exclude": [],
+  "regions": [],
   "min_market_cap_usd": 10000000000,
   "max_market_cap_usd": null,
   "risk_preference": "Medium"

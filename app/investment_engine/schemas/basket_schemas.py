@@ -46,6 +46,9 @@ class BasketResponse(BaseModel):
     id: int
     name: str
     description: Optional[str] = None
+    keywords: Optional[List[str]]
+    sectors: Optional[List[str]]
+    regions: Optional[List[str]]
     status: Optional[str] = None
     holdings: List[HoldingOut]
 

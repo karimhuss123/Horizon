@@ -30,8 +30,7 @@ Your job is to:
   "theme_summary": "2–3 sentences summarizing the investment idea using industry and product language.",
   "keywords": ["..."],
   "sectors": ["..."],
-  "regions_include": ["..."],
-  "regions_exclude": ["..."],
+  "regions": ["..."],
   "min_market_cap_usd": null,
   "max_market_cap_usd": null,
   "risk_preference": null
@@ -46,8 +45,7 @@ User: “Quantum research companies outside the US under 1 billion market cap”
   "theme_summary": "Early-stage technology companies developing quantum computing hardware, photonics, and quantum sensing systems outside the United States.",
   "keywords": ["quantum computing", "quantum hardware", "photonics", "quantum sensors", "superconducting qubits", "quantum communication"],
   "sectors": ["Technology", "Semiconductors", "Scientific Instruments"],
-  "regions_include": ["Europe", "Asia"],
-  "regions_exclude": ["United States"],
+  "regions": ["Europe", "Asia"],
   "min_market_cap_usd": 0,
   "max_market_cap_usd": 1000000000,
   "risk_preference": "High"
@@ -60,8 +58,7 @@ User: “Large stable companies focused on digital experience and content creati
   "theme_summary": "Established software and technology companies offering creative tools, digital content management, and customer experience platforms.",
   "keywords": ["digital media", "creative software", "cloud applications", "customer experience", "digital marketing", "content management", "SaaS"],
   "sectors": ["Technology", "Software", "Digital Media"],
-  "regions_include": [],
-  "regions_exclude": [],
+  "regions": [],
   "min_market_cap_usd": 10000000000,
   "max_market_cap_usd": null,
   "risk_preference": "Low"

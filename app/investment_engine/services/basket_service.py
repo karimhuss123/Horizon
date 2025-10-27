@@ -1,5 +1,4 @@
 from sqlalchemy.orm import Session
-from investment_engine.services.ai_service import AIService
 from investment_engine.services.selector_service import SelectorService
 from investment_engine.services.theme_service import ThemeService
 from investment_engine.repositories.basket_repo import BasketRepo
@@ -24,6 +23,7 @@ class BasketService:
         weighted_holdings_with_rationale = self.ai.generate_holding_rationales(criteria, weighted_holdings)
         data = {
             "user_prompt": user_prompt,
+            "embedded_query": embedded_query,
             "criteria": criteria,
             "holdings": weighted_holdings_with_rationale
         }
@@ -62,7 +62,14 @@ class BasketService:
         return self.baskets.delete(id)
     
     def edit_basket(self, basket):
-        return self.baskets.update(basket)
+        theme_svc = ThemeService(self.db, self.ai.client)
+        metadata = self.ai.generate_basket_metadata(basket)        
+        embedded_query = theme_svc.get_embedded_query({
+            "theme_summary": basket.description,
+            "keywords": metadata.get("keywords", []),
+            "sectors": metadata.get("sectors", [])
+        })    
+        return self.baskets.update(basket, metadata, embedded_query)
     
     def get_basket_suggestions(self, basket_id):
         basket = self.baskets.get(basket_id)

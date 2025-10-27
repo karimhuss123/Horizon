@@ -5,6 +5,7 @@ from investment_engine.prompts.system.rationale import RATIONALE_SYSTEM_PROMPT
 from investment_engine.prompts.user.rationale import RATIONALE_USER_PROMPT
 from investment_engine.prompts.system.basket_suggestions import BASKET_SUGGESTIONS_SYSTEM_PROMPT
 from investment_engine.prompts.user.basket_suggestions import BASKET_SUGGESTIONS_USER_PROMPT
+from investment_engine.prompts.system.basket_metadata_generate import BASKET_METADATA_SYSTEM_PROMPT
 from core.config import settings
 import json
 
@@ -17,7 +18,8 @@ class AIService:
         rationale_system_prompt: str = RATIONALE_SYSTEM_PROMPT,
         rationale_user_prompt: str = RATIONALE_USER_PROMPT,
         basket_suggestions_system_prompt: str = BASKET_SUGGESTIONS_SYSTEM_PROMPT,
-        basket_suggestions_user_prompt: str = BASKET_SUGGESTIONS_USER_PROMPT
+        basket_suggestions_user_prompt: str = BASKET_SUGGESTIONS_USER_PROMPT,
+        basket_metadata_generate: str = BASKET_METADATA_SYSTEM_PROMPT
     ):
         self.client = client
         self.intent_enrichment_prompt = intent_enrichment_prompt
@@ -26,6 +28,7 @@ class AIService:
         self.rationale_user_prompt = rationale_user_prompt
         self.basket_suggestions_system_prompt = basket_suggestions_system_prompt
         self.basket_suggestions_user_prompt = basket_suggestions_user_prompt
+        self.basket_metadata_generate = basket_metadata_generate
     
     def generate_intent_query(self, user_prompt):
         messages = [
@@ -106,5 +109,26 @@ class AIService:
             {"role": "user", "content": user_prompt}
         ]
         resp = self.client.chat(messages=messages, temperature=settings.TEMPERATURES["basket_suggestion"], as_json=True)
+        data = json.loads(resp)
+        return data
+    
+    def generate_basket_metadata(self, basket):
+        holdings_text = "\n".join(
+            f"Ticker: {h.ticker}\n"
+            f"Weight: {h.weight_pct:.2f}%\n"
+            f"Rationale: {h.rationale}%\n"
+            for h in basket.holdings
+		)
+        basket_context = (
+			f"Existing basket:\n"
+			f"Name: {basket.name}\n"
+			f"Description: {basket.description}\n\n"
+			f"Holdings:\n{holdings_text}\n\n"
+		)
+        messages = [
+            {"role": "system", "content": self.basket_metadata_generate},
+            {"role": "user", "content": basket_context}
+        ]
+        resp = self.client.chat(messages=messages, temperature=settings.TEMPERATURES["regeneration"], as_json=True)
         data = json.loads(resp)
         return data

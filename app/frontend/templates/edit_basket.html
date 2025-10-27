@@ -293,27 +293,27 @@
     }
 
     async function save(status) {
-      actionStatus.textContent = 'Saving...';
-      const payload = {
-        id: basketId,
-        name: nameInput.value.trim(),
-        description: descInput.value.trim(),
-        status: status,
-        holdings: getHoldingsFromTable(),
-      };
+        actionStatus.textContent = 'Saving...';
+        const payload = {
+            id: basketId,
+            name: nameInput.value.trim(),
+            description: descInput.value.trim(),
+            status: status,
+            holdings: getHoldingsFromTable(),
+        };
 
-      try {
-        const res = await fetch('/baskets/edit', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(payload)
-        })
-        if (!res.ok) throw new Error(`Save failed (${res.status})`)
-        window.location.href = `/`;
-      } catch(e) {
-        console.error(e);
-        actionStatus.textContent = 'Saving failed.';
-      }
+        try {
+            const res = await fetch('/baskets/edit', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            })
+            if (!res.ok) throw new Error(`Save failed (${res.status})`)
+            window.location.href = `/`;
+        } catch(e) {
+            console.error(e);
+            actionStatus.textContent = 'Saving failed.';
+        }
     }
 
     // Wire buttons
@@ -500,7 +500,7 @@
             userPrompt.value = '';
         };
         document.getElementById('suggestRejectBtn').onclick = async () => {
-            actionStatus.textContent = 'Rejecting…';
+            actionStatus.textContent = 'Rejecting...';
             card.innerHTML = '<p class="text-gray-500">Suggested basket rejected.</p>';
             userPrompt.value = '';
         };

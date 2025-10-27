@@ -10,6 +10,10 @@ class BasketRepo:
             prompt_text = data["user_prompt"],
             name = data["criteria"]["name"],
             description = data["criteria"]["theme_summary"],
+            keywords = list(data["criteria"]["keywords"]),
+            sectors = list(data["criteria"]["sectors"]),
+            regions = list(data["criteria"]["regions"]),
+            description_embedding = data["embedded_query"],
             status = BasketStatus.DRAFT
         )
         self.db.add(basket)
@@ -72,7 +76,7 @@ class BasketRepo:
         self.db.commit()
         return
     
-    def update(self, basket):
+    def update(self, basket, metadata, description_embedding = None):
         basket_obj = self.get(basket.id)
         if not basket_obj:
             raise RuntimeError("Basket does not exist.")
@@ -80,7 +84,12 @@ class BasketRepo:
         try:
             basket_obj.name = basket.name
             basket_obj.description = basket.description
+            basket_obj.keywords = metadata.get('keywords', [])
+            basket_obj.sectors = metadata.get('sectors', [])
+            basket_obj.regions = metadata.get('regions', [])
             basket_obj.status = BasketStatus(basket.status)
+            if description_embedding:
+                basket_obj.description_embedding = description_embedding
             
             self.db.commit()
             self.db.flush()

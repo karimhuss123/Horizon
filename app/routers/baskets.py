@@ -69,7 +69,8 @@ def edit_page(request: Request, basket_id: str, db: Session = Depends(get_db)):
 
 @router.post("/edit", response_model=BasketResponse, status_code=status.HTTP_200_OK)
 def save_edit(payload: BasketUpdateRequest, db: Session = Depends(get_db)):
-    svc = BasketService(db)
+    ai = AIService(OpenAIClient())
+    svc = BasketService(db, ai)
     basket_obj = svc.edit_basket(payload)
     basket = BasketResponse.model_validate(basket_obj)
     return basket

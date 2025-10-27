@@ -1,5 +1,5 @@
 from sqlalchemy import (
-    Column, String, Float, Enum, ForeignKey, DateTime, func, Integer
+    Column, String, Float, Enum, ForeignKey, DateTime, func, Integer, ARRAY
 )
 from sqlalchemy.orm import relationship, declarative_base
 import enum
@@ -25,9 +25,10 @@ class Basket(Base):
     description_embedding = Column(Vector(1536))
     status = Column(Enum(BasketStatus))
 
-    # regions = Column(String)
-    # include_sectors = Column(String)
-    # exclude_sectors = Column(String)
+    keywords = Column(ARRAY(String), nullable=True)
+    sectors = Column(ARRAY(String), nullable=True)
+    regions = Column(ARRAY(String), nullable=True)
+    
     # market_cap_min_usd = Column(Float)
     # market_cap_max_usd = Column(Float)
     # risk_level = Column(Enum(RiskLevel))
