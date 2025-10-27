@@ -6,5 +6,5 @@ class SecurityService:
         self.db = db
         self.securities = SecurityRepo(db)
     
-    def get_tickers_and_names(self):
-        return self.securities.get_tickers_and_names()
+    def get_tickers_with_names(self, query):
+        return self.securities.get_tickers_with_names(query)

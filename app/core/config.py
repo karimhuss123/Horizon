@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     INTENT_TEMP: float = 0.0
     REGEN_TEMP: float = 0.1
     RATIONALE_TEMP: float = 0.25
+    BASKET_SUGGESTION_TEMP: float = 0.25
 
     @property
     def TEMPERATURES(self) -> dict:
@@ -18,6 +19,7 @@ class Settings(BaseSettings):
             "intent": self.INTENT_TEMP,
             "regeneration": self.REGEN_TEMP,
             "rationale": self.RATIONALE_TEMP,
+            "basket_suggestion": self.BASKET_SUGGESTION_TEMP
         }
     
     class Config:

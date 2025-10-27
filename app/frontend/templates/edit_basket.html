@@ -17,157 +17,174 @@
 <div class="max-w-8xl mx-auto p-6 space-y-6">
     <!-- Header -->
     <div class="grid grid-cols-3 items-center">
-      <div class="text-left">
-        <a href="/" class="text-sm text-blue-700 hover:underline">&larr; Back</a>
-      </div>
-      <div class="text-center">
-        <h1 class="text-2xl font-semibold">Edit Basket</h1>
-      </div>
-      <div class="text-right">
-        <!-- empty placeholder to balance the left link -->
-      </div>
+        <div class="text-left">
+            <a href="/" class="text-sm text-blue-700 hover:underline">&larr; Back</a>
+        </div>
+        <div class="text-center">
+            <h1 class="text-2xl font-semibold">Edit Basket</h1>
+        </div>
+        <div class="text-right">
+            <!-- empty placeholder to balance the left link -->
+        </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6">
     
-        <!-- Basket editor -->
+        <!-- Basket editor (Left Panel) -->
         <div id="basketCard" class="bg-white shadow rounded p-6" data-basket-id="{{ basket.id }}">
-        <!-- Meta -->
-        <div class="flex items-start justify-between gap-4">
-            <div class="w-full max-w-3xl space-y-3">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                <input id="nameInput" type="text"
-                class="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value="{{ basket.name or 'Untitled Basket' }}" />
-            </div>
+            <!-- Meta -->
+            <div class="flex items-start justify-between gap-4">
+                <div class="w-full max-w-3xl space-y-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                    <input id="nameInput" type="text"
+                    class="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value="{{ basket.name or 'Untitled Basket' }}" />
+                </div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Description / Thesis</label>
-                <textarea id="descInput" rows="3"
-                class="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="What’s the investment idea?">{{ basket.description or '' }}</textarea>
-            </div>
-            </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description / Thesis</label>
+                    <textarea id="descInput" rows="3"
+                    class="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="What’s the investment idea?">{{ basket.description or '' }}</textarea>
+                </div>
+                </div>
 
-            <div class="shrink-0">
-            <span id="statusPill"
-                    class="inline-block text-xs px-2 py-1 rounded
-                        {% if basket.status == 'Active' %} bg-green-100 text-green-700
-                        {% else %} bg-gray-100 text-gray-700 {% endif %}">
-                {{ basket.status or "Draft" }}
-            </span>
-            </div>
-        </div>
-
-        <!-- Holdings table -->
-        <div class="mt-6">
-            <div class="flex items-center justify-between mb-2">
-            <h3 class="text-lg font-semibold">Holdings</h3>
-            <div class="flex items-center gap-2">
-                <button id="addRowBtn"
-                class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded">
-                + Add holding
-                </button>
-                <button id="normalizeBtn"
-                class="bg-slate-700 hover:bg-slate-800 text-white px-3 py-1.5 rounded">
-                Normalize weights to 100%
-                </button>
-            </div>
-            </div>
-
-            <div class="overflow-x-auto">
-            <table class="min-w-full border border-gray-200 rounded" id="holdingsTable">
-                <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600">Ticker</th>
-                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600">Name</th>
-                    <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 w-28">Weight %</th>
-                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600">Rationale</th>
-                    <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 w-20">Actions</th>
-                </tr>
-                </thead>
-                <tbody id="holdingsBody" class="divide-y divide-gray-100">
-                {% for h in basket.holdings %}
-                    <tr>
-                    <td class="px-3 py-2">
-                        <select class="ticker-select block w-full min-w-[75px] rounded-lg border border-gray-300 bg-white py-2 text-sm text-gray-900 overflow-visible"
-                            data-initial-ticker="{{ h.ticker }}">
-                            <!-- Options will be populated dynamically -->
-                        </select>
-                    </td>
-                    <td class="px-3 py-2">
-                        <p class="name w-full text-sm">
-                            {{ h.name or '' }} </p>
-                    </td>
-                    <td class="px-3 py-2 text-right">
-                        <input type="number" step="0.01" min="0" class="weight w-full border rounded p-2 text-right"
-                            value="{{ '%.2f'|format(h.weight_pct or 0) }}" />
-                    </td>
-                    <td class="px-3 py-2">
-                        <input type="text" class="rationale w-full border rounded p-2 text-sm"
-                            value="{{ h.rationale or '' }}" />
-                    </td>
-                    <td class="px-3 py-2 text-right">
-                        <button class="removeRow text-red-600 hover:underline">Remove</button>
-                    </td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-            </div>
-
-            <div class="mt-3 flex items-center justify-between">
-            <p id="totals" class="text-sm text-gray-700">
-                Holdings: {{ basket.holdings|length }} • Total weight: 
-                <span id="totalWeightSpan">
-                {{
-                    ('%.2f' % (
-                    (basket.holdings | map(attribute='weight_pct') | select('defined') | sum) | default(0)
-                    ))
-                }}%
+                <div class="shrink-0">
+                <span id="statusPill"
+                        class="inline-block text-xs px-2 py-1 rounded
+                            {% if basket.status == 'Active' %} bg-green-100 text-green-700
+                            {% else %} bg-gray-100 text-gray-700 {% endif %}">
+                    {{ basket.status or "Draft" }}
                 </span>
-            </p>
-            <p id="weightWarning" class="hidden text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
-                Weights should sum to 100%.
-            </p>
+                </div>
+            </div>
+
+            <!-- Holdings table -->
+            <div class="mt-6">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-lg font-semibold">Holdings</h3>
+                    <div class="flex items-center gap-2">
+                        <button id="addRowBtn"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded">
+                        + Add holding
+                        </button>
+                        <button id="normalizeBtn"
+                        class="bg-slate-700 hover:bg-slate-800 text-white px-3 py-1.5 rounded">
+                        Normalize weights to 100%
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full border border-gray-200 rounded" id="holdingsTable">
+                        <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600">Ticker</th>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600">Name</th>
+                            <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 w-28">Weight %</th>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600">Rationale</th>
+                            <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 w-20">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="holdingsBody" class="divide-y divide-gray-100">
+                        {% for h in basket.holdings %}
+                            <tr>
+                            <td class="px-3 py-2">
+                                <select class="ticker-select block w-full min-w-[75px] rounded-lg border border-gray-300 bg-white py-2 text-sm text-gray-900 overflow-visible"
+                                    data-initial-ticker="{{ h.ticker }}">
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </td>
+                            <td class="px-3 py-2">
+                                <p class="name w-full text-sm">
+                                    {{ h.name or '' }} </p>
+                            </td>
+                            <td class="px-3 py-2 text-right">
+                                <input type="number" step="0.01" min="0" class="weight w-full border rounded p-2 text-right"
+                                    value="{{ '%.2f'|format(h.weight_pct or 0) }}" />
+                            </td>
+                            <td class="px-3 py-2">
+                                <input type="text" class="rationale w-full border rounded p-2 text-sm"
+                                    value="{{ h.rationale or '' }}" />
+                            </td>
+                            <td class="px-3 py-2 text-right">
+                                <button class="removeRow text-red-600 hover:underline">Remove</button>
+                            </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-3 flex items-center justify-between">
+                <p id="totals" class="text-sm text-gray-700">
+                    Holdings: {{ basket.holdings|length }} • Total weight: 
+                    <span id="totalWeightSpan">
+                    {{
+                        ('%.2f' % (
+                        (basket.holdings | map(attribute='weight_pct') | select('defined') | sum) | default(0)
+                        ))
+                    }}%
+                    </span>
+                </p>
+                <p id="weightWarning" class="hidden text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+                    Weights should sum to 100%.
+                </p>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="mt-6 flex items-center gap-3">
+                <button id="saveActiveBtn"
+                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                Save as Active
+                </button>
+                <button id="saveDraftBtn"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                Save as Draft
+                </button>
+                <span id="actionStatus" class="text-sm text-gray-500"></span>
             </div>
         </div>
 
-        <!-- Actions -->
-        <div class="mt-6 flex items-center gap-3">
-            <button id="saveActiveBtn"
-            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
-            Save as Active
-            </button>
-            <button id="saveDraftBtn"
-            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-            Save as Draft
-            </button>
-            <span id="actionStatus" class="text-sm text-gray-500"></span>
-        </div>
-        </div>
 
-        <!-- Reprompting Care -->
-        <div id="repromptCard" class="bg-white shadow rounded p-6" data-basket-id="{{ basket.id }}">
+        <!-- Right Panel -->
+        <div class="space-y-6">
             
-            <div>
+            <!-- Reprompting Card -->
+            <div class="bg-white shadow rounded p-6 space-y-4">
+                <h1 class="text-xl font-semibold">Reprompt</h1>
                 <textarea id="userPrompt" rows="5"
                     class="bg-gray-100 w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Describe your idea..."></textarea>
 
-                <div class="mt-3 flex items-center gap-3">
+                <div class="flex items-center gap-3">
                     <button id="generateBtn"
                         class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
                         Generate
                     </button>
                     <span id="status" class="text-sm text-gray-500"></span>
                 </div>
+
+                <div id="newBasketCard">
+                    <!-- Card inserted dynamically -->
+                </div>
             </div>
 
+            <!-- AI Suggestions -->
+            <div class="bg-white shadow rounded p-6 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-xl font-semibold">AI Suggestions</h1>
+                    <button id="suggestionsRefreshBtn" class="bg-slate-700 hover:bg-slate-800 text-white px-3 py-1.5 rounded">
+                        Refresh
+                    </button>
+                </div>
+                
+                <div id="suggestionsContainer" class="space-y-2">
+                    <!-- Dynamically render suggestions here -->
+                </div>
 
-            <div id="newBasketCard" class="bg-white rounded p-6">
-                <!-- Card inserted dynamically -->
             </div>
         </div>
 
@@ -192,8 +209,8 @@
     const saveDraftBtn = document.getElementById('saveDraftBtn');
     const actionStatus = document.getElementById('actionStatus');
     const statusPill = document.getElementById('statusPill');
-
     const newBasketCard = document.getElementById('newBasketCard');
+    const suggestionsContainer = document.getElementById('suggestionsContainer');
 
     function sumWeights() {
       let sum = 0;
@@ -237,7 +254,11 @@
         </td>
       `;
       tbody.appendChild(tr);
-      initializeSelects() // inefficient
+      
+      const lastRow = tbody.lastElementChild;
+      const sel = lastRow.querySelector('.ticker-select');
+      initSelect2On(sel);
+
       tr.querySelectorAll('input').forEach(inp => inp.addEventListener('input', updateTotals));
       tr.querySelector('.removeRow').addEventListener('click', () => {
         tr.remove();
@@ -310,60 +331,59 @@
       });
     });
 
-    async function loadTickerData() {
-        try {
-            const res = await fetch('/securities/get-tickers');
-            if (!res.ok) throw new Error(`GET /securities/get-tickers -> ${res.status}`);
-            const data = await res.json();
-            return Array.isArray(data) ? data : (data.data || []);
-        } catch (e) {
-            console.error(e);
-            return [];
-        }
-    }
 
-    function populateSelectWithTickers(select, tickers) {
-        select.innerHTML = '';
-        const placeholder = document.createElement('option');
-        placeholder.value = '';
-        placeholder.textContent = '--';
-        placeholder.disabled = true;
-        placeholder.selected = true;
-        select.appendChild(placeholder);
-
-        tickers.forEach(item => {
-            const opt = document.createElement('option');
-            opt.value = item.ticker;
-            opt.textContent = item.ticker;
-            opt.dataset.name = item.name;
-            select.appendChild(opt);
+    function initSelect2On(selectEl) {
+        const $sel = $(selectEl);
+        $sel.select2({
+            width: '100%',
+            placeholder: '--',
+            allowClear: true,
+            minimumInputLength: 1,
+            ajax: {
+                url: '/securities/get-tickers',
+                dataType: 'json',
+                delay: 200,
+                data: params => ({
+                    q: params.term || ''
+                }),
+                processResults: (data) => {
+                    const results = (data || []).map(item => ({
+                        id: item.ticker,
+                        text: `${item.ticker}`,
+                        name: item.name || ''
+                    }));
+                    return { results };
+                },
+                cache: true
+            },
+            templateResult: item => item.text || '',
+            templateSelection: item => item.text || item.id || ''
         });
 
-        const init = select.dataset.initialTicker;
-        if (init) {
-            const found = Array.from(select.options).find(o => o.value === init);
-            if (found) {
-                found.selected = true;
+        $sel.on('select2:select', function(e) {
+            const name = e?.params?.data?.name || '';
+            const row = this.closest('tr');
+            const nameCell = row.querySelector('.name');
+            const rationaleCell = row.querySelector('.rationale');
+            nameCell.textContent = name;
+            rationaleCell.value = '';
+        });
+
+        $sel.on('select2:clear', function() {
+            const row = this.closest('tr');
+            const nameCell = row.querySelector('.name');
+            const rationaleCell = row.querySelector('.rationale');
+            nameCell.textContent = '';
+            rationaleCell.value = '';
+        });
+
+        // Preselect initial ticker if defined
+        const init = selectEl.dataset.initialTicker;
+            if (init) {
+                const opt = new Option(init, init, true, true);
+                selectEl.appendChild(opt);
+                $sel.trigger('change');
             }
-        }
-    }
-
-    async function initializeSelects() {
-        const selects = document.querySelectorAll('.ticker-select');
-        const tickersData = await loadTickerData()     
-        selects.forEach(select => {
-            populateSelectWithTickers(select, tickersData)
-            select.addEventListener('change', () => {
-                console.log(`Selected ticker in one dropdown: ${select.value}`);
-                const row = select.closest('tr');
-                const nameCell = row.querySelector('.name');
-                const rationaleCell = row.querySelector('.rationale')
-                const selectedOption = select.options[select.selectedIndex];
-                const companyName = selectedOption.dataset.name || '';
-                nameCell.textContent = companyName;
-                rationaleCell.value = '';
-            });
-        });
     }
 
 
@@ -411,6 +431,7 @@
 
     function renderSuggestedBasket(suggested_basket) {
         const card = document.getElementById('newBasketCard');
+        card.classList.add('bg-white', 'rounded', 'p-6');
         const userPrompt = document.getElementById('userPrompt');
         if (!card) return;
 
@@ -485,9 +506,52 @@
         };
     }
 
-    initializeSelects();
-    updateTotals();
 
+    suggestionsRefreshBtn = document.getElementById('suggestionsRefreshBtn');
+    suggestionsRefreshBtn.addEventListener('click', async () => fetchAISuggestions());
+
+    async function fetchAISuggestions() {
+        suggestionsContainer.innerHTML = '';
+        suggestionsRefreshBtn.textContent = 'Fetching...';
+        suggestionsRefreshBtn.disabled = true;
+        try {
+            const res = await fetch(`/baskets/get-suggestions?basket_id=${basketId}`, {
+                method: 'GET'
+            });
+            if (!res.ok) throw new Error(`POST /baskets/get-suggestions -> ${res.status}`);
+            const data = await res.json();
+            renderSuggestions(data);
+        } catch (e) {
+            console.error(e);
+            suggestionsContainer.innerHTML = '<p class="text-gray-500">Failed to load suggestions.</p>';
+        } finally {
+            suggestionsRefreshBtn.textContent = 'Refresh';
+            suggestionsRefreshBtn.disabled = false;
+        }
+    }
+
+    function renderSuggestions(suggestions) {
+        const rowsHtml = suggestions.map(s => `
+        <div class="border rounded-xl p-3 bg-white shadow-sm hover:bg-gray-50 flex flex-col space-y-1">
+            <div class="flex justify-between items-center">
+                <span class="font-semibold">${s.ticker} - ${s.name}</span>
+                <button class="text-xs text-blue-600 hover:underline">${s.action}</button>
+            </div>
+            <p class="text-sm text-gray-700"> 
+                ${s.rationale}
+                <a href="${s.source_url}" target="_blank" class="text-xs text-blue-600 hover:underline">Source</a>
+            </p>
+        </div>
+        `).join('');
+        suggestionsContainer.innerHTML = rowsHtml;
+    }
+
+
+    updateTotals();
+    
+    // Commented to avoid high number of calls when developing
+    // fetchAISuggestions();
+    document.querySelectorAll('.ticker-select').forEach(initSelect2On);
   </script>
 </body>
 </html>

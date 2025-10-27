@@ -12,6 +12,6 @@ router = APIRouter(prefix="/securities", tags=["securities"])
 templates = Jinja2Templates(directory="app/frontend/templates")
 
 @router.get("/get-tickers", response_model=List[TickerItem], status_code=status.HTTP_201_CREATED)
-async def get_tickers(db: Session = Depends(get_db)):
+async def get_tickers(request: Request, q: str, db: Session = Depends(get_db)):
     security_svc = SecurityService(db)
-    return security_svc.get_tickers_and_names()
+    return security_svc.get_tickers_with_names(query=q)

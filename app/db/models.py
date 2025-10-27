@@ -22,6 +22,7 @@ class Basket(Base):
     name = Column(String, nullable=False)
     prompt_text = Column(String, nullable=False)
     description = Column(String)
+    description_embedding = Column(Vector(1536))
     status = Column(Enum(BasketStatus))
 
     # regions = Column(String)

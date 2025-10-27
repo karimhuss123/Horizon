@@ -6,7 +6,11 @@ class SecurityRepo:
     def __init__(self, db: Session):
         self.db = db
     
-    def get_tickers_and_names(self):
+    def get_tickers_with_names(self, query):
         stmt = select(Security.id, Security.ticker, Security.name)
+        if query:
+            q = f"{str(query)}%"
+            stmt = stmt.where(Security.ticker.ilike(q))
+        stmt = stmt.order_by(Security.ticker)
         rows = self.db.execute(stmt).mappings().all()
         return rows

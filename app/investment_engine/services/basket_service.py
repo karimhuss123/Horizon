@@ -3,6 +3,7 @@ from investment_engine.services.ai_service import AIService
 from investment_engine.services.selector_service import SelectorService
 from investment_engine.services.theme_service import ThemeService
 from investment_engine.repositories.basket_repo import BasketRepo
+import json
 
 class BasketService:
     def __init__(self, db: Session, ai=None):
@@ -10,7 +11,7 @@ class BasketService:
         self.ai = ai
         self.baskets = BasketRepo(db)
     
-    def generate_and_persist(self, user_prompt):
+    def generate_basket(self, user_prompt):
         if not self.ai:
             raise RuntimeError("AIService is not initialized for BasketService.")
         selector_svc = SelectorService(self.db)
@@ -29,7 +30,7 @@ class BasketService:
         basket = self.baskets.create_draft_basket(data)
         return basket
     
-    def regenerate(self, regen_data):
+    def regenerate_basket(self, regen_data):
         if not self.ai:
             raise RuntimeError("AIService is not initialized for BasketService.")
         selector_svc = SelectorService(self.db)
@@ -47,18 +48,23 @@ class BasketService:
         }
         return data
 
-    def get_all(self):
+    def get_all_baskets(self):
         baskets = self.baskets.get_all()
         return {"items": baskets[0], "total": baskets[1]}
     
-    def get(self, id):
+    def get_basket(self, id):
         return self.baskets.get(id)
     
     def accept_draft(self, id):
         return self.baskets.accept_draft(id)
     
-    def delete(self, id):
+    def delete_basket(self, id):
         return self.baskets.delete(id)
     
-    def edit(self, basket):
+    def edit_basket(self, basket):
         return self.baskets.update(basket)
+    
+    def get_basket_suggestions(self, basket_id):
+        basket = self.baskets.get(basket_id)
+        suggestions = self.ai.generate_basket_suggestions(basket)
+        return suggestions.get('data', [])

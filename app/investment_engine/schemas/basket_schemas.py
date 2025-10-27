@@ -19,10 +19,7 @@ class BasketRegenerateRequest(BaseModel):
             raise ValueError(f"Holdings weight_pct must sum to 100 (got {total:.4f})")
         return self
 
-class BasketStatusUpdateRequest(BaseModel):
-    basket_id: int
-
-class BasketDeleteRequest(BaseModel):
+class BasketIdRequest(BaseModel):
     basket_id: int
 
 class BasketUpdateRequest(BaseModel):
@@ -55,3 +52,10 @@ class BasketResponse(BaseModel):
 class BasketListResponse(BaseModel):
     items: List[BasketResponse]
     total: int
+
+class BasketSuggestionItem(BaseModel):
+    ticker: str
+    name: str
+    rationale: str
+    action: str
+    source_url: str
