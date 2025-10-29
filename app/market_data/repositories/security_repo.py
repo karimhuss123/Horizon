@@ -6,6 +6,9 @@ class SecurityRepo:
     def __init__(self, db: Session):
         self.db = db
     
+    def get_security(self, id):
+        return self.db.query(Security).filter_by(id=id).first()
+    
     def get_tickers_with_names(self, query):
         stmt = select(Security.id, Security.ticker, Security.name)
         if query:

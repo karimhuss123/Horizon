@@ -72,4 +72,20 @@ class Security(Base):
     type = Column(String)
     market_cap_usd = Column(Float)
     
+    news = relationship("News", back_populates="security", cascade="all, delete-orphan", single_parent=True)
     holdings = relationship("Holding", back_populates="security")
+
+class News(Base):
+    __tablename__ = "news"
+    
+    id = Column(Integer, primary_key=True)
+    security_id = Column(Integer, ForeignKey("securities.id"), nullable=False, index=True)
+    title = Column(String)
+    summary = Column(String)
+    url = Column(String, unique=True)
+    source = Column(String)
+    published_at = Column(DateTime(timezone=True))
+    text_embedding = Column(Vector(1536))
+    injected_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    security = relationship("Security", back_populates="news")

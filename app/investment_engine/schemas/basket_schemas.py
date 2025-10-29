@@ -57,6 +57,7 @@ class BasketListResponse(BaseModel):
     total: int
 
 class BasketSuggestionItem(BaseModel):
+    security_id: int
     ticker: str
     name: str
     rationale: str

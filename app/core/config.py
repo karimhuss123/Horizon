@@ -1,12 +1,12 @@
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    APP_NAME: str
-    DATABASE_URL: str
+    APP_NAME: str | None = None
+    DATABASE_URL: str | None = None
 
-    OPENAI_KEY: str
-    OPENAI_CHAT_MODEL: str
-    OPENAI_EMBEDDINGS_MODEL: str
+    OPENAI_KEY: str | None = None
+    OPENAI_CHAT_MODEL: str | None = None
+    OPENAI_EMBEDDINGS_MODEL: str | None = None
 
     INTENT_TEMP: float = 0.0
     REGEN_TEMP: float = 0.1

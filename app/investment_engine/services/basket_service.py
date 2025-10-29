@@ -1,8 +1,9 @@
 from sqlalchemy.orm import Session
 from investment_engine.services.selector_service import SelectorService
 from investment_engine.services.theme_service import ThemeService
+from investment_engine.services.similarity_service import SimilarityService
 from investment_engine.repositories.basket_repo import BasketRepo
-import json
+from market_data.services.news_service import NewsService
 
 class BasketService:
     def __init__(self, db: Session, ai=None):
@@ -72,6 +73,18 @@ class BasketService:
         return self.baskets.update(basket, metadata, embedded_query)
     
     def get_basket_suggestions(self, basket_id):
+        selector_svc = SelectorService(self.db)
+        theme_svc = ThemeService(self.db, self.ai.client)
+        news_svc = NewsService(self.db, self.ai.client)
+        sim_svc = SimilarityService(self.db)
+        
+        # candidate_ids = selector_svc.screen(criteria)
+        
         basket = self.baskets.get(basket_id)
-        suggestions = self.ai.generate_basket_suggestions(basket)
-        return suggestions.get('data', [])
+        basket_security_ids = self.baskets.get_basket_security_ids(basket_id)
+        add_hits = theme_svc.vector_search_within_candidates(basket.description_embedding, exclude_ids=basket_security_ids)
+        news_svc.process_news_for_securities(add_hits)
+        
+        top_5_suggestions = sim_svc.get_top_k_suggestions(basket.description_embedding, add_hits, k=5)
+        top_5_suggestions_with_rationales = self.ai.generate_suggestion_rationales(basket, top_5_suggestions)
+        return top_5_suggestions_with_rationales

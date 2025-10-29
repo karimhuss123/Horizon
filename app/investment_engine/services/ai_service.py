@@ -1,10 +1,10 @@
 from clients.openai_client import OpenAIClient
 from investment_engine.prompts.system.intent_enrichment import INTENT_ENRICHMENT_PROMPT
 from investment_engine.prompts.system.intent_regeneration import INTENT_REGENERATION_PROMPT
-from investment_engine.prompts.system.rationale import RATIONALE_SYSTEM_PROMPT
-from investment_engine.prompts.user.rationale import RATIONALE_USER_PROMPT
-from investment_engine.prompts.system.basket_suggestions import BASKET_SUGGESTIONS_SYSTEM_PROMPT
-from investment_engine.prompts.user.basket_suggestions import BASKET_SUGGESTIONS_USER_PROMPT
+from investment_engine.prompts.system.gen_rationale import GEN_RATIONALE_SYSTEM_PROMPT
+from investment_engine.prompts.user.gen_rationale import GEN_RATIONALE_USER_PROMPT
+from investment_engine.prompts.system.suggestion_rationale import SUG_RATIONALE_SYSTEM_PROMPT
+from investment_engine.prompts.user.suggestion_rationale import SUG_RATIONALE_USER_PROMPT
 from investment_engine.prompts.system.basket_metadata_generate import BASKET_METADATA_SYSTEM_PROMPT
 from core.config import settings
 import json
@@ -15,19 +15,19 @@ class AIService:
 		client: OpenAIClient,
 		intent_enrichment_prompt: str = INTENT_ENRICHMENT_PROMPT,
         intent_regeneration_prompt: str = INTENT_REGENERATION_PROMPT,
-        rationale_system_prompt: str = RATIONALE_SYSTEM_PROMPT,
-        rationale_user_prompt: str = RATIONALE_USER_PROMPT,
-        basket_suggestions_system_prompt: str = BASKET_SUGGESTIONS_SYSTEM_PROMPT,
-        basket_suggestions_user_prompt: str = BASKET_SUGGESTIONS_USER_PROMPT,
+        gen_rationale_system_prompt: str = GEN_RATIONALE_SYSTEM_PROMPT,
+        gen_rationale_user_prompt: str = GEN_RATIONALE_USER_PROMPT,
+        sug_rationale_system_prompt: str = SUG_RATIONALE_SYSTEM_PROMPT,
+        sug_rationale_user_prompt: str = SUG_RATIONALE_USER_PROMPT,
         basket_metadata_generate: str = BASKET_METADATA_SYSTEM_PROMPT
     ):
         self.client = client
         self.intent_enrichment_prompt = intent_enrichment_prompt
         self.intent_regeneration_prompt = intent_regeneration_prompt
-        self.rationale_system_prompt = rationale_system_prompt
-        self.rationale_user_prompt = rationale_user_prompt
-        self.basket_suggestions_system_prompt = basket_suggestions_system_prompt
-        self.basket_suggestions_user_prompt = basket_suggestions_user_prompt
+        self.gen_rationale_system_prompt = gen_rationale_system_prompt
+        self.gen_rationale_user_prompt = gen_rationale_user_prompt
+        self.sug_rationale_system_prompt = sug_rationale_system_prompt
+        self.sug_rationale_user_prompt = sug_rationale_user_prompt
         self.basket_metadata_generate = basket_metadata_generate
     
     def generate_intent_query(self, user_prompt):
@@ -72,14 +72,15 @@ class AIService:
             f"Weight: {h["weight_pct"]:.2f}%\n"
             for h in holdings
 		)
-        user_prompt = self.rationale_user_prompt.format(
+        user_prompt = self.gen_rationale_user_prompt.format(
             basket_name=criteria["name"],
             theme_summary=criteria["theme_summary"],
             keywords=criteria["keywords"],
+            sectors=criteria["sectors"],
             holdings_text=holdings_text
         )
         messages = [
-            {"role": "system", "content": self.rationale_system_prompt},
+            {"role": "system", "content": self.gen_rationale_system_prompt},
             {"role": "user", "content": user_prompt}
         ]
         resp = self.client.chat(messages=messages, temperature=settings.TEMPERATURES["rationale"], as_json=True)
@@ -88,29 +89,34 @@ class AIService:
             for h in holdings:
                 h["rationale"] = data.get(h["ticker"], "")
         return holdings
-
-    def generate_basket_suggestions(self, basket, max_suggestions=5):
-        holdings_text = "\n".join(
-            f"Ticker: {h.ticker}\n"
-            f"Name: {h.name}\n"
-            f"Description: {h.security.description}\n"
-            f"Weight: {h.weight_pct:.2f}%\n"
-            f"Rationale: {h.rationale}%\n"
-            for h in basket.holdings
-		)
-        user_prompt = self.basket_suggestions_user_prompt.format(
+    
+    def generate_suggestion_rationales(self, basket, securities):
+        securities_text = "\n".join(
+            f"Ticker: {s["ticker"]}\n"
+            f"Name: {s["name"]}\n"
+            f"Description: {s["company_description"]}\n"
+            f"Industry: {s["industry"]}\n"
+            f"Market Cap (USD): {s["market_cap_usd"]}\n"
+            f"Relevant news: {s["news_summary"]}\n"
+            for s in securities
+        )
+        user_prompt = self.sug_rationale_user_prompt.format(
             basket_name=basket.name,
-            basket_description=basket.description,
-            holdings_text=holdings_text,
-            max_suggestions=max_suggestions
+            theme_summary=basket.description,
+            keywords=basket.keywords,
+            sectors=basket.sectors,
+            securities_text=securities_text
         )
         messages = [
-            {"role": "system", "content": self.basket_suggestions_system_prompt},
+            {"role": "system", "content": self.sug_rationale_system_prompt},
             {"role": "user", "content": user_prompt}
         ]
-        resp = self.client.chat(messages=messages, temperature=settings.TEMPERATURES["basket_suggestion"], as_json=True)
+        resp = self.client.chat(messages=messages, temperature=settings.TEMPERATURES["rationale"], as_json=True)
         data = json.loads(resp)
-        return data
+        if isinstance(data, dict):
+            for s in securities:
+                s["rationale"] = data.get(s["ticker"], "")
+        return securities
     
     def generate_basket_metadata(self, basket):
         holdings_text = "\n".join(

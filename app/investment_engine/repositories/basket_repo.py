@@ -59,6 +59,17 @@ class BasketRepo:
             ).first()
         )
     
+    def get_basket_security_ids(self, id):
+        basket = self.get(id)
+        seen = set()
+        out = []
+        for h in basket.holdings:
+            sid = h.security.id
+            if sid is not None and sid not in seen:
+                seen.add(sid)
+                out.append(sid)
+        return out
+    
     def accept_draft(self, id):
         basket = self.get(id)
         if not basket:

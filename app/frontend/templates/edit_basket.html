@@ -531,26 +531,60 @@
     }
 
     function renderSuggestions(suggestions) {
-        const rowsHtml = suggestions.map(s => `
-        <div class="border rounded-xl p-3 bg-white shadow-sm hover:bg-gray-50 flex flex-col space-y-1">
-            <div class="flex justify-between items-center">
-                <span class="font-semibold">${s.ticker} - ${s.name}</span>
-                <button class="text-xs text-blue-600 hover:underline">${s.action}</button>
+        const rowsHtml = suggestions.map(s => {
+            let onclickHandler;
+            if (s.action === "Add") {
+                onclickHandler = `addSuggestion('${s.ticker}', '${s.name}', '${s.rationale}')`;
+            } else if (s.action === "Update") {
+                onclickHandler = `updateSuggestion('${s.ticker}')`;
+            } else {
+                onclickHandler = `removeSuggestion('${s.ticker}')`;
+            }
+
+            return `
+            <div class="border rounded-xl p-3 bg-white shadow-sm hover:bg-gray-50 flex flex-col space-y-1">
+                <div class="flex justify-between items-center">
+                    <span class="font-semibold">${s.ticker} - ${s.name}</span>
+                    <button class="text-xs text-blue-600 hover:underline" onclick="${onclickHandler}">
+                        ${s.action}
+                    </button>
+                </div>
+                <p class="text-sm text-gray-700"> 
+                    ${s.rationale}
+                    <a href="${s.source_url}" target="_blank" class="text-xs text-blue-600 hover:underline">Source</a>
+                </p>
             </div>
-            <p class="text-sm text-gray-700"> 
-                ${s.rationale}
-                <a href="${s.source_url}" target="_blank" class="text-xs text-blue-600 hover:underline">Source</a>
-            </p>
-        </div>
-        `).join('');
+            `;
+        }).join('');
         suggestionsContainer.innerHTML = rowsHtml;
     }
 
 
+    function addSuggestion(ticker, name, rationale) {
+        addRow({
+            "ticker": ticker,
+            "name": name,
+            "rationale": rationale
+        });
+    }
+
+    function updateSuggestion(ticker) {
+        console.log("Updating suggestion for:", ticker);
+        // Update logic here
+    }
+
+    function removeSuggestion(ticker) {
+        console.log("Remove action for:", ticker);
+        // Handle other logic
+    }
+
+
+
     updateTotals();
     
-    // Commented to avoid high number of calls when developing
+    // Commented to avoid high number of calls when developing. Click "Refresh" to get suggestions
     // fetchAISuggestions();
+
     document.querySelectorAll('.ticker-select').forEach(initSelect2On);
   </script>
 </body>

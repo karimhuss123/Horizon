@@ -1,5 +1,4 @@
 from openai import OpenAI
-from fastapi import HTTPException
 from core.config import settings
 
 class OpenAIClient:
@@ -22,3 +21,8 @@ class OpenAIClient:
     def get_embeddings(self, string):
         resp = self.client.embeddings.create(model=self.embeddings_model, input=string)
         return resp.data[0].embedding
+
+    def get_embeddings_batch(self, list):
+        resp = self.client.embeddings.create(model=self.embeddings_model, input=list)
+        embeddings_list = [item.embedding for item in resp.data]
+        return embeddings_list, len(embeddings_list)
