@@ -13,7 +13,11 @@ class SelectorService:
             q = q.filter(Security.market_cap_usd >= criteria["min_market_cap_usd"])
         if criteria.get("max_market_cap_usd"):
             q = q.filter(Security.market_cap_usd <= criteria["max_market_cap_usd"])
-        # Add more filters for include or exclude sector, etc.
+        if criteria.get("sectors"):
+            q = q.filter(Security.gics_sector.in_(criteria["sectors"]))
+        if criteria.get("regions"):
+            q = q.filter(Security.region.in_(criteria["regions"]))
+        # More filters can be added...
         
         return [s.id for s in q.all()]
     

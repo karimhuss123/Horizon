@@ -43,8 +43,8 @@ def main():
         df = pd.read_csv(
             "./db/data/securities_data.csv",
             usecols=[
-                "ticker", "name", "description", "industry",
-                "currency", "exchange", "type", "market_cap_usd"
+                "ticker", "name", "description", "industry", "currency",
+                "exchange", "type", "market_cap_usd", "gics_sector", "region"
             ],
             dtype={"ticker": "string"},     # keep ticker as string
             keep_default_na=False           # do NOT treat 'NA'/'N/A' as NaN

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from investment_engine.math.similarity_backend import np_cosine_similarity, np_cosine_similarity_batch
+from investment_engine.utils.math.similarity_backend import np_cosine_similarity_batch
 from market_data.repositories.security_repo import SecurityRepo
 from datetime import datetime, timezone
 import math

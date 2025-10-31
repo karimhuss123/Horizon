@@ -19,7 +19,7 @@ class AIService:
         gen_rationale_user_prompt: str = GEN_RATIONALE_USER_PROMPT,
         sug_rationale_system_prompt: str = SUG_RATIONALE_SYSTEM_PROMPT,
         sug_rationale_user_prompt: str = SUG_RATIONALE_USER_PROMPT,
-        basket_metadata_generate: str = BASKET_METADATA_SYSTEM_PROMPT
+        basket_metadata_generate_prompt: str = BASKET_METADATA_SYSTEM_PROMPT
     ):
         self.client = client
         self.intent_enrichment_prompt = intent_enrichment_prompt
@@ -28,7 +28,7 @@ class AIService:
         self.gen_rationale_user_prompt = gen_rationale_user_prompt
         self.sug_rationale_system_prompt = sug_rationale_system_prompt
         self.sug_rationale_user_prompt = sug_rationale_user_prompt
-        self.basket_metadata_generate = basket_metadata_generate
+        self.basket_metadata_generate_prompt = basket_metadata_generate_prompt
     
     def generate_intent_query(self, user_prompt):
         messages = [
@@ -122,7 +122,7 @@ class AIService:
         holdings_text = "\n".join(
             f"Ticker: {h.ticker}\n"
             f"Weight: {h.weight_pct:.2f}%\n"
-            f"Rationale: {h.rationale}%\n"
+            f"Rationale: {h.rationale}\n"
             for h in basket.holdings
 		)
         basket_context = (
@@ -132,7 +132,7 @@ class AIService:
 			f"Holdings:\n{holdings_text}\n\n"
 		)
         messages = [
-            {"role": "system", "content": self.basket_metadata_generate},
+            {"role": "system", "content": self.basket_metadata_generate_prompt},
             {"role": "user", "content": basket_context}
         ]
         resp = self.client.chat(messages=messages, temperature=settings.TEMPERATURES["regeneration"], as_json=True)

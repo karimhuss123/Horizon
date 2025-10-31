@@ -13,6 +13,8 @@ class BasketRepo:
             keywords = list(data["criteria"]["keywords"]),
             sectors = list(data["criteria"]["sectors"]),
             regions = list(data["criteria"]["regions"]),
+            market_cap_min_usd = data["criteria"]["min_market_cap_usd"],
+            market_cap_max_usd = data["criteria"]["max_market_cap_usd"],
             description_embedding = data["embedded_query"],
             status = BasketStatus.DRAFT
         )
@@ -98,6 +100,8 @@ class BasketRepo:
             basket_obj.keywords = metadata.get('keywords', [])
             basket_obj.sectors = metadata.get('sectors', [])
             basket_obj.regions = metadata.get('regions', [])
+            basket_obj.market_cap_min_usd = metadata.get('min_market_cap_usd', None)
+            basket_obj.market_cap_max_usd = metadata.get('max_market_cap_usd', None)
             basket_obj.status = BasketStatus(basket.status)
             if description_embedding:
                 basket_obj.description_embedding = description_embedding

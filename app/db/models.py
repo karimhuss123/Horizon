@@ -28,9 +28,9 @@ class Basket(Base):
     keywords = Column(ARRAY(String), nullable=True)
     sectors = Column(ARRAY(String), nullable=True)
     regions = Column(ARRAY(String), nullable=True)
+    market_cap_min_usd = Column(Float)
+    market_cap_max_usd = Column(Float)
     
-    # market_cap_min_usd = Column(Float)
-    # market_cap_max_usd = Column(Float)
     # risk_level = Column(Enum(RiskLevel))
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -67,6 +67,8 @@ class Security(Base):
     description = Column(String)
     description_embedding = Column(Vector(1536))
     industry = Column(String)
+    gics_sector = Column(String)
+    region = Column(String)
     currency = Column(String)
     exchange = Column(String)
     type = Column(String)

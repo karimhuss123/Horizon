@@ -1,9 +1,8 @@
 from sqlalchemy.orm import Session
 from clients.openai_client import OpenAIClient
 from db.models import Security
-from sqlalchemy import select, bindparam, text
-from pgvector.sqlalchemy import Vector
-from investment_engine.math.similarity_backend import sa_bind_vector, sa_cosine_similarity_expr
+from sqlalchemy import select, text
+from investment_engine.utils.math.similarity_backend import sa_bind_vector, sa_cosine_similarity_expr
 
 class ThemeService:
     def __init__(self, db: Session, client: OpenAIClient):
@@ -20,7 +19,7 @@ class ThemeService:
     def vector_search_within_candidates(
         self, 
         query_vec: list[float], 
-        candidate_ids: list[int] | None = None, 
+        include_ids: list[int] | None = None, 
         exclude_ids: list[int] | None = None, 
         limit: int = 10, 
         probes: int = 10
@@ -33,8 +32,8 @@ class ThemeService:
         self.db.execute(text(f"SET ivfflat.probes = {probes}"))
         stmt = select(Security, sim_expr).where(Security.description_embedding.isnot(None))
 
-        if candidate_ids:
-            stmt = stmt.where(Security.id.in_(candidate_ids))
+        if include_ids:
+            stmt = stmt.where(Security.id.in_(include_ids))
         
         if exclude_ids:
             stmt = stmt.where(~Security.id.in_(exclude_ids))

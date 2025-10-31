@@ -534,7 +534,7 @@
         const rowsHtml = suggestions.map(s => {
             let onclickHandler;
             if (s.action === "Add") {
-                onclickHandler = `addSuggestion('${s.ticker}', '${s.name}', '${s.rationale}')`;
+                onclickHandler = `addRow({'ticker': '${s.ticker}', 'name': '${s.name}', 'rationale': '${s.rationale}'})`;
             } else if (s.action === "Update") {
                 onclickHandler = `updateSuggestion('${s.ticker}')`;
             } else {
@@ -557,15 +557,6 @@
             `;
         }).join('');
         suggestionsContainer.innerHTML = rowsHtml;
-    }
-
-
-    function addSuggestion(ticker, name, rationale) {
-        addRow({
-            "ticker": ticker,
-            "name": name,
-            "rationale": rationale
-        });
     }
 
     function updateSuggestion(ticker) {
