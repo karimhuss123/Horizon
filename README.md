@@ -1,1 +1,1 @@
-# IdeaVest
+# Horizon
