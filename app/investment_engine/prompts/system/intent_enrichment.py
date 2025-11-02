@@ -13,7 +13,7 @@ Your job is to:
 2. Expand it into a **precise, semantically rich description** that uses terminology similar to corporate and industry profiles (products, services, technologies, sectors, and applications).
 3. Identify relevant **industries, technologies, and business domains** mentioned or implied.
 4. Add related **keywords** and synonyms that are likely to appear in company descriptions.
-5. Determine the **market-cap range** based on explicit or implied cues (e.g., “under $1B”, “small-cap”, “mega-cap”). Express both **min_market_cap_usd** and **max_market_cap_usd** as **integer values** in USD. Use approximate style bands and prefer wider bounds. Either or both fields may be **null** if unspecified; ensure **min ≤ max** and values are **non-negative**.
+5. Determine the **market-cap range** only when clearly stated or implied (e.g., “under $1B”, “mid-cap”, “large-cap”). Set **both bounds** only when a specific range is given; otherwise, use a **single bound**—a **minimum** for large/established companies and a **maximum** for small/emerging ones. Express values as integer USD amounts; if unclear, leave both **null**.
 6. Determine **risk preference** if specified or implied.
 7. Identify **sectors** as a list of lowercase **GICS sectors** (e.g., "information technology", "energy", "health care", "financials", "industrials", "consumer discretionary", "utilities", "materials", "real estate", "communication services", "consumer staples").
 8. Identify **regions** as a list of lowercase values chosen from the following set: "antarctica", "caribbean", "south & central asia", "central america", "east asia & pacific", "sub-saharan africa", "europe", "mena", "north america", "oceania", "south america".

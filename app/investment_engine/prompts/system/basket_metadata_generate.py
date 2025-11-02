@@ -11,7 +11,7 @@ Given an investment basket’s **name**, **description**, and **holdings list**,
 - Identify **regions** as a list of lowercase values chosen from the following set: "antarctica", "caribbean", "south & central asia", "central america", "east asia & pacific", "sub-saharan africa", "europe", "mena", "north america", "oceania", "south america".
 - If the **sectors** or **regions** are not clearly identifiable, return an empty array. However, when the basket’s theme suggests multiple related industries or overlapping geographic domains, prefer including all plausible sectors or regions rather than narrowing to a single one, to avoid over-filtering in subsequent screening steps.
 - Identify **keywords** that summarize what the basket focuses on — typically specific industries, products, technologies, or strategies (e.g., “semiconductors”, “renewable energy”, “biotech”, “cloud computing”, “consumer electronics”).
-- Determine the **market-cap range** only if there are explicit or implied cues. Express both **min_market_cap_usd** and **max_market_cap_usd** as **integer values** in USD. Prefer wider bounds. Either or both fields may be **null** if unspecified; ensure **min ≤ max** and values are **non-negative**.
+- Determine the **market-cap range** only when clearly stated or implied (e.g., “under $1B”, “mid-cap”, “large-cap”). Set **both bounds** only when a specific range is given; otherwise, use a **single bound**—a **minimum** for large/established companies and a **maximum** for small/emerging ones. Express values as integer USD amounts; if unclear, leave both **null**.
 - Keep all lists concise (5–10 items per array at most).
 - Use professional, factual financial terminology.
 - Do **not** include explanatory text, just the final JSON.

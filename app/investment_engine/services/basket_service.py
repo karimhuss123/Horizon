@@ -77,7 +77,6 @@ class BasketService:
         theme_svc = ThemeService(self.db, self.ai.client)
         news_svc = NewsService(self.db, self.ai.client)
         sim_svc = SimilarityService(self.db)
-        
         basket = self.baskets.get(basket_id)
         candidate_ids = selector_svc.screen({
             "min_market_cap_usd": basket.market_cap_min_usd,
