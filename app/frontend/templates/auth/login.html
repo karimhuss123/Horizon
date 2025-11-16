@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+</head>
+<body>
+    <h2>Login</h2>
+
+    <!-- STEP 1: Enter Email -->
+    <form id="emailForm">
+        <input type="email" id="emailInput" placeholder="Enter your email" required>
+        <button type="submit">Send Code</button>
+    </form>
+
+    <!-- STEP 2: Enter Code (hidden at first) -->
+    <form id="codeForm" style="display:none;">
+        <p>A 6-digit code was sent to your email.</p>
+        <input 
+            type="text" 
+            id="codeInput" 
+            placeholder="Enter code" 
+            maxlength="6"
+            pattern="[0-9]{6}"
+            required
+        >
+        <button type="submit">Verify</button>
+    </form>
+
+    <script>
+        const emailForm = document.getElementById('emailForm');
+        const codeForm = document.getElementById('codeForm');
+
+        const emailInput = document.getElementById('emailInput');
+        const codeInput = document.getElementById('codeInput');
+
+        let savedEmail = "";
+
+        emailForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            savedEmail = emailInput.value.trim();
+
+            try {
+                const res = await fetch('/auth/code/request', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: savedEmail })
+                });
+
+                if (res.ok) {
+                    // Move to Step 2
+                    emailForm.style.display = 'none';
+                    codeForm.style.display = 'block';
+                } else {
+                    console.error("Error requesting code");
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        });
+
+        codeForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const code = codeInput.value.trim();
+
+            try {
+                const res = await fetch('/auth/code/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: savedEmail, code })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    window.location.href = "/";
+                } else {
+                    console.error("Invalid code");
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        });
+    </script>
+
+</body>
+</html>

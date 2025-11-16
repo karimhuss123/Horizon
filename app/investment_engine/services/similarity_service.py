@@ -1,7 +1,8 @@
 from sqlalchemy.orm import Session
 from investment_engine.utils.math.similarity_backend import np_cosine_similarity_batch
 from market_data.repositories.security_repo import SecurityRepo
-from datetime import datetime, timezone
+from db.utils.time import current_datetime_utc
+from datetime import timezone
 import math
 
 class SimilarityService:
@@ -83,7 +84,7 @@ class SimilarityService:
             return 0.0
         if published_at.tzinfo is None:
             published_at = published_at.replace(tzinfo=timezone.utc)
-        now = datetime.now(timezone.utc)
+        now = current_datetime_utc()
         delta_days = max((now - published_at).total_seconds() / 86400.0, 0.0)
         tau = half_life_days / math.log(2)  # score halves every half_life_days
         return math.exp(-delta_days / tau)

@@ -1,10 +1,11 @@
 from sqlalchemy import (
-    Column, String, Float, Enum, ForeignKey, DateTime, func, Integer, ARRAY
+    Column, String, Float, Enum, ForeignKey, DateTime, Integer, ARRAY, Boolean, func
 )
-from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy.orm import relationship
 import enum
 from db.db import Base
 from pgvector.sqlalchemy import Vector
+from db.utils.time import current_datetime_utc
 
 class RiskLevel(enum.Enum):
     LOW = "Low"
@@ -14,6 +15,28 @@ class RiskLevel(enum.Enum):
 class BasketStatus(enum.Enum):
     DRAFT = "Draft"
     ACTIVE = "Active"
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True, index=True, nullable=False)
+    is_verified = Column(Boolean, default=False, nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=current_datetime_utc)
+
+class LoginCode(Base):
+    __tablename__ = "login_codes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    code_hash = Column(String, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    used_at = Column(DateTime, nullable=True)
+    attempts = Column(Integer, default=0, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=current_datetime_utc)
+
+    user = relationship("User")
 
 class Basket(Base):
     __tablename__ = "baskets"
@@ -33,8 +56,8 @@ class Basket(Base):
     
     # risk_level = Column(Enum(RiskLevel))
     
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    created_at = Column(DateTime(timezone=True), default=current_datetime_utc)
+    updated_at = Column(DateTime(timezone=True), onupdate=current_datetime_utc)
 
     holdings = relationship("Holding", back_populates="basket", cascade="all, delete-orphan")
 
@@ -88,6 +111,6 @@ class News(Base):
     source = Column(String)
     published_at = Column(DateTime(timezone=True))
     text_embedding = Column(Vector(1536))
-    injected_at = Column(DateTime(timezone=True), server_default=func.now())
+    injected_at = Column(DateTime(timezone=True), default=current_datetime_utc)
     
     security = relationship("Security", back_populates="news")
