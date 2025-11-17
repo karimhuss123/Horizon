@@ -41,14 +41,26 @@ async def verify_login_code(payload: CodeVerifyRequest, db: Session = Depends(ge
         httponly=True,
         secure=True,
         samesite="lax",
-        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES*60
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES*60     # in seconds
     )
     return response
 
-@router.get("/logout")
+@router.post("/logout")
 def logout(current_user = Depends(require_login)):
-    response = RedirectResponse(url="/auth/login")
+    response = RedirectResponse(url="/auth/login", status_code=status.HTTP_303_SEE_OTHER)
     response.delete_cookie("access_token")
     return response
+
+@router.post("/delete")
+def delete(db: Session = Depends(get_db), current_user = Depends(require_login)):
+    auth_svc = AuthService(db)
+    auth_svc.delete_user(current_user.id)
+    response = RedirectResponse(url="/auth/login", status_code=status.HTTP_303_SEE_OTHER)
+    response.delete_cookie("access_token")
+    return response
+
+@router.get("/account", response_class=HTMLResponse)
+def account(request: Request, current_user = Depends(require_login)):
+    return templates.TemplateResponse("auth/account.html", {"request": request, "email": current_user.email})
 
 # LATER ON: Implement refresh tokens

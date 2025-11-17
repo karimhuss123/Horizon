@@ -21,10 +21,20 @@ def generate_code_hash(code):
 async def send_login_code_email(code, email):
     html = f"""
     <html>
-      <body>
-        <h2>Your Login Code</h2>
-        <p style="font-size: 18px;">Code: <strong>{code}</strong></p>
-      </body>
+        <body style="font-family: Arial, sans-serif; color: #333; padding: 20px;">
+            <h2 style="margin-bottom: 10px;">Your Login Code</h2>
+
+            <p style="font-size: 18px; margin: 0 0 20px;">
+                Use the code below to complete your sign-in:
+                <br><br>
+                <strong style="font-size: 24px;">{code}</strong>
+            </p>
+
+            <p style="font-size: 12px; line-height: 1.4; color: #666;">
+                This code will expire in 10 minutes. If it expires before you use it,
+                simply sign in again to receive a new code.
+            </p>
+        </body>
     </html>
     """
     await send_mail(

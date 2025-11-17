@@ -27,7 +27,7 @@ templates = Jinja2Templates(directory="app/frontend/templates")
 async def generate(payload: BasketGenerateRequest, db: Session = Depends(get_db), current_user = Depends(require_login)):
     ai_svc = AIService(OpenAIClient())
     basket_svc = BasketService(db, ai_svc)
-    basket = basket_svc.generate_basket(user_prompt=payload.user_prompt)
+    basket = basket_svc.generate_basket(user_prompt=payload.user_prompt, user_id=current_user.id)
     return basket
 
 @router.post('/regenerate', response_model=BasketRegenerationResponse, status_code=status.HTTP_200_OK)
@@ -40,31 +40,31 @@ async def regenerate(payload: BasketRegenerateRequest, db: Session = Depends(get
 @router.get("/get-all", response_model=BasketListResponse, status_code=status.HTTP_200_OK)
 async def get_all(db: Session = Depends(get_db), current_user = Depends(require_login)):
     basket_svc = BasketService(db)
-    return basket_svc.get_all_baskets()
+    return basket_svc.get_all_baskets(user_id=current_user.id)
 
 @router.get("/details", response_class=HTMLResponse, status_code=status.HTTP_200_OK)
 async def details(request: Request, basket_id: str, db: Session = Depends(get_db), current_user = Depends(require_login)):
     basket_svc = BasketService(db)
-    basket_obj = basket_svc.get_basket(basket_id)
+    basket_obj = basket_svc.get_basket(id=basket_id, user_id=current_user.id)
     basket = BasketResponse.model_validate(basket_obj)
     return templates.TemplateResponse("basket_details.html", {"request": request, "basket": basket})
 
 @router.post("/accept", response_model=BasketResponse, status_code=status.HTTP_200_OK)
 async def accept(payload: BasketIdRequest, db: Session = Depends(get_db), current_user = Depends(require_login)):
     basket_svc = BasketService(db)
-    basket = basket_svc.accept_draft(payload.basket_id)
+    basket = basket_svc.accept_draft(id=payload.basket_id, user_id=current_user.id)
     return basket
 
 @router.post("/delete", status_code=status.HTTP_200_OK)
 async def delete(payload: BasketIdRequest, db: Session = Depends(get_db), current_user = Depends(require_login)):
     basket_svc = BasketService(db)
-    basket_svc.delete_basket(payload.basket_id)
+    basket_svc.delete_basket(id=payload.basket_id, user_id=current_user.id)
     return
 
 @router.get("/edit", response_class=HTMLResponse, status_code=status.HTTP_200_OK)
 def edit_page(request: Request, basket_id: str, db: Session = Depends(get_db), current_user = Depends(require_login)):
     basket_svc = BasketService(db)
-    basket_obj = basket_svc.get_basket(basket_id)
+    basket_obj = basket_svc.get_basket(id=basket_id, user_id=current_user.id)
     basket = BasketResponse.model_validate(basket_obj)
     return templates.TemplateResponse("edit_basket.html", {"request": request, "basket": basket})
 
@@ -72,7 +72,7 @@ def edit_page(request: Request, basket_id: str, db: Session = Depends(get_db), c
 def save_edit(payload: BasketUpdateRequest, db: Session = Depends(get_db), current_user = Depends(require_login)):
     ai_svc = AIService(OpenAIClient())
     basket_svc = BasketService(db, ai_svc)
-    basket_obj = basket_svc.edit_basket(payload)
+    basket_obj = basket_svc.edit_basket(basket=payload, user_id=current_user.id)
     basket = BasketResponse.model_validate(basket_obj)
     return basket
 
@@ -80,5 +80,5 @@ def save_edit(payload: BasketUpdateRequest, db: Session = Depends(get_db), curre
 def get_suggestions(request: Request, basket_id: str, db: Session = Depends(get_db), current_user = Depends(require_login)):
     ai_svc = AIService(OpenAIClient())
     basket_svc = BasketService(db, ai_svc)
-    suggestions = basket_svc.get_basket_suggestions(basket_id)
+    suggestions = basket_svc.get_basket_suggestions(basket_id=basket_id, user_id=current_user.id)
     return suggestions

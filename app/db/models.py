@@ -24,6 +24,9 @@ class User(Base):
     is_verified = Column(Boolean, default=False, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime(timezone=True), default=current_datetime_utc)
+    
+    baskets = relationship("Basket", back_populates="user", cascade="all, delete-orphan")
+    login_codes = relationship("LoginCode", back_populates="user", cascade="all, delete-orphan")
 
 class LoginCode(Base):
     __tablename__ = "login_codes"
@@ -42,6 +45,7 @@ class Basket(Base):
     __tablename__ = "baskets"
 
     id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     name = Column(String, nullable=False)
     prompt_text = Column(String, nullable=False)
     description = Column(String)
@@ -59,6 +63,7 @@ class Basket(Base):
     created_at = Column(DateTime(timezone=True), default=current_datetime_utc)
     updated_at = Column(DateTime(timezone=True), onupdate=current_datetime_utc)
 
+    user = relationship("User", back_populates="baskets")
     holdings = relationship("Holding", back_populates="basket", cascade="all, delete-orphan")
 
 class Holding(Base):

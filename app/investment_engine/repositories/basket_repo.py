@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session, selectinload
 from db.models import Basket, Holding, Security, BasketStatus
+from fastapi import HTTPException
 
 class BasketRepo:
     def __init__(self, db: Session):
@@ -7,6 +8,7 @@ class BasketRepo:
     
     def create_draft_basket(self, data):
         basket = Basket(
+            user_id = data["user_id"],
             prompt_text = data["user_prompt"],
             name = data["criteria"]["name"],
             description = data["criteria"]["theme_summary"],
@@ -41,9 +43,10 @@ class BasketRepo:
             .get(basket.id)
         )
     
-    def get_all(self):
+    def get_all(self, user_id):
         baskets = (
             self.db.query(Basket)
+            .filter_by(user_id=user_id)
             .options(
                 selectinload(Basket.holdings).selectinload(Holding.security)
             )
@@ -52,17 +55,20 @@ class BasketRepo:
         )
         return baskets, len(baskets)
     
-    def get(self, id):
-        return (
+    def get(self, id, user_id):
+        basket = (
             self.db.query(Basket)
-            .filter_by(id=id)
+            .filter_by(id=id, user_id=user_id)
             .options(
                 selectinload(Basket.holdings).selectinload(Holding.security)
             ).first()
         )
+        if not basket:
+            raise HTTPException(status_code=404, detail="Basket not found")
+        return basket
     
-    def get_basket_security_ids(self, id):
-        basket = self.get(id)
+    def get_basket_security_ids(self, id, user_id):
+        basket = self.get(id, user_id)
         seen = set()
         out = []
         for h in basket.holdings:
@@ -72,8 +78,8 @@ class BasketRepo:
                 out.append(sid)
         return out
     
-    def accept_draft(self, id):
-        basket = self.get(id)
+    def accept_draft(self, id, user_id):
+        basket = self.get(id, user_id)
         if not basket:
             return RuntimeError("Basket does not exist.")
         basket.status = BasketStatus.ACTIVE
@@ -81,19 +87,17 @@ class BasketRepo:
         self.db.refresh(basket)
         return basket
     
-    def delete(self, id):
-        basket = self.get(id)
+    def delete(self, id, user_id):
+        basket = self.get(id, user_id)
         if not basket:
             return RuntimeError("Basket does not exist.")
         self.db.delete(basket)
         self.db.commit()
-        return
     
-    def update(self, basket, metadata, description_embedding = None):
-        basket_obj = self.get(basket.id)
+    def update(self, basket, metadata, user_id, description_embedding = None):
+        basket_obj = self.get(basket.id, user_id)
         if not basket_obj:
             raise RuntimeError("Basket does not exist.")
-        
         try:
             basket_obj.name = basket.name
             basket_obj.description = basket.description
@@ -105,12 +109,9 @@ class BasketRepo:
             basket_obj.status = BasketStatus(basket.status)
             if description_embedding:
                 basket_obj.description_embedding = description_embedding
-            
             self.db.commit()
             self.db.flush()
-            
             basket_obj.holdings = []
-            
             for h in basket.holdings:
                 ticker = h.ticker
                 if not ticker:
@@ -130,7 +131,6 @@ class BasketRepo:
                     rationale=h.rationale,
                 )
                 self.db.add(holding)
-
             self.db.commit()
             self.db.refresh(basket_obj)
             return basket_obj

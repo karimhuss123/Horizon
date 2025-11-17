@@ -1,54 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Create Basket</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Horizon — Create Basket</title>
+
+<!-- Fonts & Tailwind -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji'; }
+</style>
 </head>
 
-<body class="bg-gray-100 min-h-screen">
-  <div class="max-w-4xl mx-auto p-6 space-y-6">
-    <!-- Create box -->
-    <div class="bg-white shadow rounded p-6">
-      <h1 class="text-2xl font-semibold mb-4">Create a Basket</h1>
-
-      <textarea id="message" rows="4"
-        class="bg-gray-100 w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        placeholder="Describe your idea..."></textarea>
-
-      <div class="mt-3 flex items-center gap-3">
-        <button id="submitBtn"
-          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-          Generate
-        </button>
-        <span id="status" class="text-sm text-gray-500"></span>
-      </div>
+<body class="bg-slate-950 text-white min-h-screen">
+    <!-- Decorative horizon gradient background -->
+    <div class="pointer-events-none fixed inset-0 -z-10">
+        <div class="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950"></div>
+        <div class="absolute inset-x-0 top-[-30%] h-[140vh] bg-[radial-gradient(140rem_60rem_at_50%_15%,rgba(45,212,191,0.22),transparent_75%)]"></div>
     </div>
 
-    <!-- Boards: always visible -->
-    <div class="bg-white shadow rounded p-6">
-      <!-- Tabs -->
-      <div class="grid grid-cols-2 gap-4 mb-4">
-        <button data-filter="Active" id="tabActive"
-          class="tab-btn bg-green-100 text-green-700 rounded p-2 py-2 text-center font-medium">Active</button>
-        <button data-filter="Draft" id="tabDraft"
-          class="tab-btn bg-gray-100 text-gray-700 rounded p-2 py-2 text-center font-medium">Draft</button>
-      </div>
+    {% include 'modules/header.html' %}
 
-      <!-- List area -->
-      <div id="basketList" class="space-y-4">
-        <!-- Blue basket cards will be injected here -->
-      </div>
+    <!-- Main -->
+    <main class="relative z-10">
+        <div class="mx-auto max-w-5xl px-6 py-10 space-y-8">
+        <!-- Create box -->
+        <section class="rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-2xl backdrop-blur">
+            <div class="flex items-center justify-between gap-3">
+                <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">
+                    Create a <span class="bg-gradient-to-r from-teal-300 via-cyan-300 to-teal-300 bg-clip-text text-transparent">Basket</span>
+                </h1>
+                <span class="hidden text-xs text-slate-400 sm:inline">Describe an idea, we generate a basket.</span>
+            </div>
 
-      <!-- Empty state -->
-      <div id="emptyState" class="hidden text-center text-gray-600 py-8">
-        No baskets found for this status.
-      </div>
-    </div>
-  </div>
+            <div class="mt-5">
+                <label for="message" class="mb-2 block text-sm font-medium text-slate-200">
+                    Idea / Theme
+                </label>
+                <textarea
+                    id="message"
+                    rows="4"
+                    class="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white placeholder-slate-500 shadow-inner shadow-black/30 outline-none focus:border-teal-400/60"
+                    placeholder="Describe your idea... (e.g., “AI infrastructure”, “Clean energy leaders”)"
+                ></textarea>
+            </div>
 
-  <script>
+            <div class="mt-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+                <button
+                    id="submitBtn"
+                    class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-teal-400 to-cyan-400 px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-teal-500/30 transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60">
+                    Generate
+                </button>
+                <span id="status" class="text-xs text-slate-400"></span>
+            </div>
+        </section>
+
+        <!-- Boards: always visible -->
+        <section class="rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-2xl backdrop-blur">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <h2 class="text-lg font-semibold tracking-tight">Your Baskets</h2>
+            <!-- Tabs -->
+            <div class="grid grid-cols-2 gap-3 sm:w-64">
+                <button
+                    data-filter="Active"
+                    id="tabActive"
+                    class="tab-btn rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2 text-center text-sm font-medium text-slate-200 transition focus:outline-none">
+                    Active
+                </button>
+                <button
+                    data-filter="Draft"
+                    id="tabDraft"
+                    class="tab-btn rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2 text-center text-sm font-medium text-slate-200 transition focus:outline-none">
+                    Draft
+                </button>
+            </div>
+            </div>
+
+            <!-- List area -->
+            <div id="basketList" class="mt-5 space-y-4">
+            <!-- Basket cards will be injected here -->
+            </div>
+
+            <!-- Empty state -->
+            <div
+                id="emptyState"
+                class="hidden mt-6 rounded-2xl border border-dashed border-white/10 bg-slate-900/60 py-8 text-center text-sm text-slate-400">
+                No baskets found for this status.
+            </div>
+        </section>
+        </div>
+    </main>
+</body>
+</html>
+
+<script>
     // --- Elements
     const submitBtn = document.getElementById('submitBtn');
     const textarea  = document.getElementById('message');
@@ -59,70 +108,82 @@
 
     // --- State
     let allBaskets = [];
-    
+
     // --- Load saved tab on page load
     const savedTab = localStorage.getItem('activeFilter');
     let activeFilter = savedTab || 'Active'; // default tab if nothing saved
 
-    // --- Modify setActiveTab to save choice
+    // --- Update active tab styles & save choice
     function setActiveTab(filter) {
-        activeFilter = filter;
-        localStorage.setItem('activeFilter', filter); // <— Save choice
-        tabBtns.forEach(btn => {
+    activeFilter = filter;
+    localStorage.setItem('activeFilter', filter);
+
+    tabBtns.forEach(btn => {
         const isActive = btn.dataset.filter === filter;
+
         btn.classList.toggle('ring-2', isActive);
-        if (activeFilter === 'Active') {
-            btn.classList.toggle('ring-green-500', isActive);
-        } else {
-            btn.classList.toggle('ring-gray-500', isActive);
-        }
-      });
+        btn.classList.toggle('ring-teal-400/70', isActive);
+        btn.classList.toggle('bg-slate-900', isActive);
+        btn.classList.toggle('bg-slate-900/60', !isActive);
+        btn.classList.toggle('text-teal-200', isActive);
+        btn.classList.toggle('text-slate-200', !isActive);
+    });
     }
 
     function renderList() {
-        listEl.innerHTML = '';
-        const items = allBaskets.filter(b => (b.status || 'Active') === activeFilter);
+    listEl.innerHTML = '';
+    const items = allBaskets.filter(b => (b.status || 'Active') === activeFilter);
 
-        if (items.length === 0) {
-            emptyEl.classList.remove('hidden');
-            return;
-        }
-        emptyEl.classList.add('hidden');
+    if (items.length === 0) {
+        emptyEl.classList.remove('hidden');
+        return;
+    }
+    emptyEl.classList.add('hidden');
 
-        items.forEach(b => {
-            const card = document.createElement('div');
-            card.className = 'bg-gray-100 w-full border rounded p-2';
+    items.forEach(b => {
+        const card = document.createElement('div');
+        card.className =
+        'group cursor-pointer rounded-2xl border border-white/10 bg-slate-900/60 p-4 transition ' +
+        'hover:border-teal-400/60 hover:bg-slate-900/80';
 
-            const holdingsCount = Array.isArray(b.holdings) ? b.holdings.length : 0;
-            const desc = b.description || '';
-            const status = b.status || 'Draft';
-            const statusClass = status === 'Active'
-              ? 'bg-green-100 text-green-700'
-              : 'bg-gray-100 text-gray-700';
+        const holdingsCount = Array.isArray(b.holdings) ? b.holdings.length : 0;
+        const desc = b.description || '';
+        const status = b.status || 'Draft';
+        const statusClass =
+        status === 'Active'
+            ? 'border-teal-500/40 bg-teal-500/15 text-teal-300'
+            : 'border-slate-600/60 bg-slate-800/80 text-slate-300';
 
-            card.innerHTML = `
+        card.innerHTML = `
             <div class="flex items-start justify-between gap-4">
                 <div>
-                <div class="text-lg font-semibold">${b.name || 'Untitled Basket'}</div>
-                <div class="text-gray-700 mt-1 line-clamp-2">${desc}</div>
+                <div class="text-base font-semibold text-white">
+                    ${b.name || 'Untitled Basket'}
                 </div>
-                <div class="shrink-0 text-xs bg-gray-300 rounded px-2 py-1">
-                ${b.status || 'Draft'}
+                <div class="mt-1 text-sm text-slate-300/90 line-clamp-2">
+                    ${desc}
+                </div>
+                </div>
+                <div class="shrink-0">
+                <span class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${statusClass}">
+                    ${status}
+                </span>
                 </div>
             </div>
-            <div class="mt-3 text-sm text-gray-700">
-                Holdings: <span class="font-medium">${holdingsCount}</span>
+            <div class="mt-3 text-xs text-slate-400">
+                Holdings:
+                <span class="font-semibold text-slate-200">${holdingsCount}</span>
             </div>
-            `;
+        `;
 
-            card.addEventListener('click', async () => {
+        card.addEventListener('click', () => {
             const id = b.id;
             if (!id) return;
             window.location.href = `/baskets/details?basket_id=${encodeURIComponent(id)}`;
-            });
-
-            listEl.appendChild(card);
         });
+
+        listEl.appendChild(card);
+    });
     }
 
     async function fetchAllBaskets() {
@@ -149,37 +210,36 @@
     });
 
     submitBtn.addEventListener('click', async () => {
-		const user_prompt = textarea.value.trim();
-		if (!user_prompt) {
+        const user_prompt = textarea.value.trim();
+        if (!user_prompt) {
             statusEl.textContent = 'Please enter a prompt.';
-			return;
-		}
+            return;
+        }
         statusEl.textContent = '';
-		submitBtn.textContent = 'Generating...';
-		submitBtn.disabled = true;
-		try {
-			const res = await fetch('/baskets/generate', {
+        submitBtn.textContent = 'Generating...';
+        submitBtn.disabled = true;
+
+        try {
+            const res = await fetch('/baskets/generate', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user_prompt })
-			});
-			if (!res.ok) throw new Error(`Server error ${res.status}`);
-			await res.json();
-			textarea.value = '';
-			await fetchAllBaskets();
-			setActiveTab('Draft');
-			renderList();
-		} catch (err) {
-			console.error(err);
-			statusEl.textContent = 'Failed to generate.';
-		} finally {
-			submitBtn.textContent = 'Generate';
-			submitBtn.disabled = false;
-		}
+            });
+            if (!res.ok) throw new Error(`Server error ${res.status}`);
+            await res.json();
+            textarea.value = '';
+            await fetchAllBaskets();
+            setActiveTab('Draft');
+            renderList();
+        } catch (err) {
+            console.error(err);
+            statusEl.textContent = 'Failed to generate.';
+        } finally {
+            submitBtn.textContent = 'Generate';
+            submitBtn.disabled = false;
+        }
     });
 
     setActiveTab(activeFilter);
     fetchAllBaskets();
-  </script>
-</body>
-</html>
+</script>

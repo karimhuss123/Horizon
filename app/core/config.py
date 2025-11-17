@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     LOGIN_CODE_MINUTES_TO_EXPIRY: int = 10
     SECRET_KEY: str | None = None
     JWT_ALGORITHM: str | None = None
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 5
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 5      # 5 days
     
     MAIL_USERNAME: EmailStr
     MAIL_PASSWORD: str

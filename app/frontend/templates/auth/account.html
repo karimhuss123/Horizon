@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Horizon — Account</title>
+
+<!-- Fonts & Tailwind -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+    html { scroll-behavior: smooth; }
+    body {
+    font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
+        'Apple Color Emoji', 'Segoe UI Emoji';
+    }
+</style>
+</head>
+
+<body class="bg-slate-950 text-white min-h-screen">
+    <!-- Decorative horizon gradient background -->
+    <div class="pointer-events-none fixed inset-0 -z-10">
+        <div class="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950"></div>
+        <div class="absolute inset-x-0 top-[-30%] h-[140vh] bg-[radial-gradient(140rem_60rem_at_50%_15%,rgba(45,212,191,0.22),transparent_75%)]"></div>
+    </div>
+
+    {% include 'modules/header.html' %}
+
+    <!-- Main -->
+    <main class="relative z-10">
+        <div class="mx-auto flex min-h-[calc(100vh-4rem)] max-w-3xl items-center px-6 py-10">
+        <div class="w-full">
+            <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">
+            Your <span class="bg-gradient-to-r from-teal-300 via-cyan-300 to-teal-300 bg-clip-text text-transparent">Account</span>
+            </h1>
+            <p class="mt-2 text-sm text-slate-400">
+            Manage your Horizon account and sign out securely.
+            </p>
+
+            <section class="mt-6 rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-2xl backdrop-blur">
+            <div class="space-y-4">
+                <div>
+                <label class="mb-1 block text-sm font-medium text-slate-200">
+                    Email
+                </label>
+                <div class="w-full rounded-xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-slate-200 shadow-inner shadow-black/30">
+                    {{ email }}
+                </div>
+                </div>
+
+                <div class="mt-4 flex flex-wrap items-center gap-3">
+                    <form action="/auth/logout" method="post">
+                        <button
+                            id="logoutBtn"
+                            type="submit"
+                            class="inline-flex items-center justify-center rounded-xl border border-white/15 bg-slate-900/70 px-4 py-2 text-xs font-semibold text-slate-100 shadow-sm hover:bg-slate-900"
+                        >
+                            Log out
+                        </button>
+                    </form>
+                    <form 
+                        action="/auth/delete" 
+                        method="post"
+                        onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');">
+                        <button
+                            id="deleteBtn"
+                            type="submit"
+                            class="inline-flex items-center justify-center rounded-xl border border-red-500/40 bg-red-600/20 px-4 py-2 text-xs font-semibold text-red-200 shadow-sm hover:bg-red-600/30"
+                        >
+                            Delete account
+                        </button>
+                    </form>
+                </div>
+            </div>
+            </section>
+
+            <p class="mt-4 text-[11px] text-slate-500">
+            Deleting your account is permanent and cannot be undone.
+            </p>
+        </div>
+        </div>
+    </main>
+</body>
+</html>

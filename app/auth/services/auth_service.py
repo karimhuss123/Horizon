@@ -25,3 +25,6 @@ class AuthService:
             return None
         self.user_repo.set_user_as_verified(user.id)
         return user
+    
+    def delete_user(self, id):
+        self.user_repo.delete(id)
