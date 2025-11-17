@@ -568,6 +568,8 @@
                 <span class="font-semibold text-slate-200">${holdings.length}</span>
             </p>
 
+            <input type="hidden" id="regenerationId" value="${suggested_basket.id || ''}" />
+
             <div class="mt-4 flex flex-wrap items-center gap-3">
                 <button
                     id="suggestAcceptBtn"
@@ -588,19 +590,30 @@
         const actionStatus = document.getElementById('suggestActionStatus');
         document.getElementById('suggestAcceptBtn').onclick = async () => {
             actionStatus.textContent = 'Accepting…';
+            acceptRegeneration(suggested_basket.id)
             nameInput.value = suggested_basket.name || '';
             descInput.value = suggested_basket.description || '';
             tbody.innerHTML = '';
             suggested_basket.holdings.forEach(h => addRow(h));
             updateTotals();
+            card.className = '';
             card.innerHTML = '<p class="text-xs text-slate-400">Suggested basket accepted into editor.</p>';
             userPrompt.value = '';
         };
         document.getElementById('suggestRejectBtn').onclick = async () => {
             actionStatus.textContent = 'Rejecting...';
+            card.className = '';
             card.innerHTML = '<p class="text-xs text-slate-400">Suggested basket rejected.</p>';
             userPrompt.value = '';
         };
+    }
+
+    async function acceptRegeneration(id) {
+        const res = await fetch('/baskets/accept-regeneration', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({id})
+        });
     }
 
     suggestionsRefreshBtn = document.getElementById('suggestionsRefreshBtn');

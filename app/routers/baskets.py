@@ -12,7 +12,8 @@ from investment_engine.schemas.basket_schemas import (
     BasketIdRequest,
     BasketUpdateRequest,
     BasketRegenerationResponse,
-    BasketSuggestionItem
+    BasketSuggestionItem,
+    AcceptRegenerationRequest
 )
 from clients.openai_client import OpenAIClient
 from fastapi.responses import HTMLResponse
@@ -34,7 +35,7 @@ async def generate(payload: BasketGenerateRequest, db: Session = Depends(get_db)
 async def regenerate(payload: BasketRegenerateRequest, db: Session = Depends(get_db), current_user = Depends(require_login)):
     ai_svc = AIService(OpenAIClient())
     basket_svc = BasketService(db, ai_svc)
-    basket_data = basket_svc.regenerate_basket(payload)
+    basket_data = basket_svc.regenerate_basket(payload, current_user.id)
     return basket_data
 
 @router.get("/get-all", response_model=BasketListResponse, status_code=status.HTTP_200_OK)
@@ -82,3 +83,9 @@ def get_suggestions(request: Request, basket_id: str, db: Session = Depends(get_
     basket_svc = BasketService(db, ai_svc)
     suggestions = basket_svc.get_basket_suggestions(basket_id=basket_id, user_id=current_user.id)
     return suggestions
+
+@router.post("/accept-regeneration", status_code=status.HTTP_200_OK)
+def accept_regeneration(payload: AcceptRegenerationRequest, db: Session = Depends(get_db), current_user = Depends(require_login)):
+    basket_svc = BasketService(db)
+    basket_svc.accept_regeneration(payload.id, current_user.id)
+    return

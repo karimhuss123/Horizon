@@ -3,14 +3,14 @@ from typing import List, Optional
 from investment_engine.schemas.holding_schemas import HoldingIn, HoldingOut
 
 class BasketGenerateRequest(BaseModel):
-    user_prompt: str = Field(..., min_length=3)
+    user_prompt: str = Field(..., min_length=3, max_length=1000)
 
 class BasketRegenerateRequest(BaseModel):
     id: int
-    name: str = Field(..., min_length=1)
-    description: Optional[str] = None
-    holdings: List[HoldingIn] = Field(..., min_items=1)
-    user_prompt: str = Field(..., min_length=3)
+    name: str = Field(..., min_length=1, max_length=200)
+    description: Optional[str] = Field(None, max_length=1500)
+    holdings: List[HoldingIn] = Field(..., min_items=1, max_items=50)
+    user_prompt: str = Field(..., min_length=3, max_length=1000)
     
     @model_validator(mode="after")
     def check_holdings_total_weight(self):
@@ -24,10 +24,10 @@ class BasketIdRequest(BaseModel):
 
 class BasketUpdateRequest(BaseModel):
     id: int
-    name: str = Field(..., min_length=1)
-    description: Optional[str] = None
-    status: str = Field(..., min_length=1)
-    holdings: List[HoldingIn] = Field(..., min_items=1)
+    name: str = Field(..., min_length=1, max_length=200)
+    description: Optional[str] = Field(None, max_length=1500)
+    status: str = Field(..., min_length=1, max_length=50)
+    holdings: List[HoldingIn] = Field(..., min_items=1, max_items=50)
     
     @model_validator(mode="after")
     def check_holdings_total_weight(self):
@@ -37,6 +37,7 @@ class BasketUpdateRequest(BaseModel):
         return self
 
 class BasketRegenerationResponse(BaseModel):
+    id: int
     name: str
     description: Optional[str] = None
     holdings: List[HoldingOut]
@@ -63,3 +64,6 @@ class BasketSuggestionItem(BaseModel):
     rationale: str
     action: str
     source_url: str
+
+class AcceptRegenerationRequest(BaseModel):
+    id: int

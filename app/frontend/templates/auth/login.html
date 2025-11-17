@@ -34,7 +34,7 @@
                 <img src="{{ request.url_for('static', path='images/horizon-logo.png') }}" alt="Horizon logo"
                 class="inline-block h-12 w-12 rounded-full object-cover shadow-lg shadow-teal-500/20"
                 onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';" />
-                <h1 class="mt-4 text-2xl font-semibold tracking-tight">Sign in to Horizon</h1>
+                <h1 class="mt-4 text-2xl font-semibold tracking-tight">Sign in to <span class="bg-gradient-to-r from-teal-300 via-cyan-300 to-teal-300 bg-clip-text text-transparent">Horizon</span></h1>
                 <p class="mt-1 text-sm text-slate-400">Secure, one-time code via email.</p>
             </div>
 
@@ -64,8 +64,7 @@
                 <!-- STEP 2: Enter Code (hidden at first) -->
                 <form id="codeForm" style="display:none;" class="space-y-4">
                     <p class="text-sm text-slate-300">
-                        A 6-digit code was sent to
-                        <span id="codeEmail" class="font-semibold text-white"></span>
+                        A 6-digit code was sent to <span id="codeEmail" class="font-semibold text-white"></span>
                     </p>
                     <div>
                         <label for="codeInput" class="mb-1 block text-sm font-medium text-slate-200">
@@ -139,7 +138,7 @@
                     if (codeEmailSpan) {
                         codeEmailSpan.textContent = savedEmail;
                     }
-                    statusMsg.textContent = 'We’ve sent a code to your email.';
+                    statusMsg.textContent = 'If you don’t receive an email, please click "Go Back" and submit your email again.';
                 } else {
                     console.error("Error requesting code");
                     statusMsg.textContent = 'Something went wrong requesting your code. Please try again.';
@@ -167,7 +166,7 @@
                     window.location.href = "/";
                 } else {
                     console.error("Invalid code");
-                    statusMsg.textContent = 'Invalid code. Please check the code and try again.';
+                    statusMsg.textContent = 'Invalid code. Please check the code and try again. If the problem persists, you can go back and request a new code.';
                 }
             } catch (err) {
                 console.error(err);

@@ -9,7 +9,7 @@ class BasketRepo:
     def create_draft_basket(self, data):
         basket = Basket(
             user_id = data["user_id"],
-            prompt_text = data["user_prompt"],
+            initial_user_prompt = data["user_prompt"],
             name = data["criteria"]["name"],
             description = data["criteria"]["theme_summary"],
             keywords = list(data["criteria"]["keywords"]),

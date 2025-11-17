@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     RATIONALE_TEMP: float = 0.25
     BASKET_SUGGESTION_TEMP: float = 0.25
     
+    RESEND_API_KEY: str | None = None
+    RESEND_NO_REPLY_DEFAULT_SENDER: str | None = None
+    
     LOGIN_CODE_VERIFICATION_MAX_ATTEMPTS: int = 5
     LOGIN_CODE_MINUTES_TO_EXPIRY: int = 10
     SECRET_KEY: str | None = None

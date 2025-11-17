@@ -6,8 +6,8 @@ SixDigitCode = Annotated[str,
 ]
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: EmailStr = Field(..., max_length=254)
 
 class CodeVerifyRequest(BaseModel):
-    email: EmailStr
+    email: EmailStr = Field(..., max_length=254)
     code: SixDigitCode

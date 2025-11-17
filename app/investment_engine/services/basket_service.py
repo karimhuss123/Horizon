@@ -3,14 +3,17 @@ from investment_engine.services.selector_service import SelectorService
 from investment_engine.services.theme_service import ThemeService
 from investment_engine.services.similarity_service import SimilarityService
 from investment_engine.repositories.basket_repo import BasketRepo
+from investment_engine.repositories.regeneration_repo import RegenerationRepo
 from market_data.services.news_service import NewsService
 from fastapi import HTTPException, status
+import json
 
 class BasketService:
     def __init__(self, db: Session, ai=None):
         self.db = db
         self.ai = ai
         self.baskets = BasketRepo(db)
+        self.regenerations = RegenerationRepo(db)
     
     def generate_basket(self, user_prompt, user_id):
         if not self.ai:
@@ -33,8 +36,7 @@ class BasketService:
         basket = self.baskets.create_draft_basket(data)
         return basket
     
-    # PERSIST REGENERATION ATTEMPT
-    def regenerate_basket(self, regen_data):
+    def regenerate_basket(self, regen_data, user_id):
         if not self.ai:
             raise RuntimeError("AIService is not initialized for BasketService.")
         selector_svc = SelectorService(self.db)
@@ -46,10 +48,17 @@ class BasketService:
         weighted_holdings = selector_svc.assign_hybrid_weights(securities=hits)
         weighted_holdings_with_rationale = self.ai.generate_holding_rationales(criteria, weighted_holdings)
         data = {
+            "basket_id": regen_data.id,
+            "regeneration_user_prompt": regen_data.user_prompt,
+            "initial_basket_name": regen_data.name,
+            "initial_basket_description": regen_data.description,
+            "initial_basket_holdings": [json.loads(h.json()) for h in regen_data.holdings],
             "name": criteria["name"],
             "description": criteria["theme_summary"],
             "holdings": weighted_holdings_with_rationale
         }
+        regeneration = self.regenerations.create_regeneration(data, user_id)
+        data["id"] = regeneration.id
         return data
 
     def get_all_baskets(self, user_id):
@@ -93,3 +102,6 @@ class BasketService:
         top_5_suggestions = sim_svc.get_top_k_suggestions(basket.description_embedding, add_hits, k=5)
         top_5_suggestions_with_rationales = self.ai.generate_suggestion_rationales(basket, top_5_suggestions)
         return top_5_suggestions_with_rationales
+    
+    def accept_regeneration(self, regeneration_id, user_id):
+        return self.regenerations.accept_regeneration(regeneration_id, user_id)

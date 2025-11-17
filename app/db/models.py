@@ -6,6 +6,7 @@ import enum
 from db.db import Base
 from pgvector.sqlalchemy import Vector
 from db.utils.time import current_datetime_utc
+from sqlalchemy.dialects.postgresql import JSONB
 
 class RiskLevel(enum.Enum):
     LOW = "Low"
@@ -47,7 +48,7 @@ class Basket(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     name = Column(String, nullable=False)
-    prompt_text = Column(String, nullable=False)
+    initial_user_prompt = Column(String, nullable=False)
     description = Column(String)
     description_embedding = Column(Vector(1536))
     status = Column(Enum(BasketStatus))
@@ -65,6 +66,27 @@ class Basket(Base):
 
     user = relationship("User", back_populates="baskets")
     holdings = relationship("Holding", back_populates="basket", cascade="all, delete-orphan")
+    regenerations = relationship("Regeneration", back_populates="basket", cascade="all, delete-orphan")
+
+class Regeneration(Base):
+    __tablename__ = "regenerations"
+    
+    id = Column(Integer, primary_key=True)
+    basket_id = Column(Integer, ForeignKey("baskets.id", ondelete="CASCADE"))
+    regeneration_user_prompt = Column(String, nullable=False)
+    
+    initial_basket_name = Column(String, nullable=False)
+    initial_basket_description = Column(String, nullable=False)
+    initial_basket_holdings_list = Column(ARRAY(JSONB), nullable=False)
+    
+    regenerated_name = Column(String, nullable=False)
+    regenerated_description = Column(String, nullable=False)
+    regenerated_holdings_list = Column(ARRAY(JSONB), nullable=False)
+    
+    is_accepted = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=current_datetime_utc)
+    
+    basket = relationship("Basket", back_populates="regenerations")
 
 class Holding(Base):
     __tablename__ = "holdings"

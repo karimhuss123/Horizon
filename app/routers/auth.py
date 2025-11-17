@@ -59,8 +59,4 @@ def delete(db: Session = Depends(get_db), current_user = Depends(require_login))
     response.delete_cookie("access_token")
     return response
 
-@router.get("/account", response_class=HTMLResponse)
-def account(request: Request, current_user = Depends(require_login)):
-    return templates.TemplateResponse("auth/account.html", {"request": request, "email": current_user.email})
-
 # LATER ON: Implement refresh tokens
