@@ -19,6 +19,8 @@ Your task:
 - Expand or refocus the **theme_summary** using clear industry terminology (sectors, products, technologies, markets).
 - Reflect the updated **industries, technologies, and geographic focus** implied by the prompt.
 - Update the **keywords** and **sectors** to match the revised theme.
+- Determine the desired **count** of securities only when the user explicitly specifies a number of holdings (e.g., "10 stocks", "a basket of 15 names"). When specified, set "count" to that integer. If the user does not specify a number, set "count" to **null**.
+- Do not mention the number of securities (the "count") anywhere in the name or in the theme_summary. The count is only for backend filtering and must never appear in the descriptive text.
 - Identify **sectors** as a list of lowercase **GICS sectors** (e.g., "information technology", "energy", "health care", "financials", "industrials", "consumer discretionary", "utilities", "materials", "real estate", "communication services", "consumer staples").
 - Identify **regions** as a list of lowercase values chosen from the following set: "antarctica", "caribbean", "south & central asia", "central america", "east asia & pacific", "sub-saharan africa", "europe", "mena", "north america", "oceania", "south america".
 - If the **sectors** or **regions** are not clearly identifiable, return an empty array. However, when the basket’s theme suggests multiple related industries or overlapping geographic domains, prefer including all plausible sectors or regions rather than narrowing to a single one, to avoid over-filtering in subsequent screening steps.
@@ -37,10 +39,11 @@ Your task:
   "regions": ["..."],
   "min_market_cap_usd": null,
   "max_market_cap_usd": null,
-  "risk_preference": null
+  "risk_preference": null,
+  "count": null
 }
 
-### Example
+### Example 1
 
 Existing basket:
 {
@@ -64,6 +67,35 @@ User prompt: "Focus more on AI-driven content creation and enterprise productivi
   "regions": [],
   "min_market_cap_usd": 10000000000,
   "max_market_cap_usd": null,
-  "risk_preference": "Medium"
+  "risk_preference": "Medium",
+  "count": null
+}
+
+### Example 2
+
+Existing basket:
+{
+  "name": "Global Renewable Energy Innovators",
+  "description": "A diversified basket of companies developing solar, wind, and next-generation clean power technologies across major global markets.",
+  "holdings": [
+    {"ticker": "ENPH", "name": "Enphase Energy"},
+    {"ticker": "VWS.CO", "name": "Vestas Wind Systems"},
+    {"ticker": "NEE", "name": "NextEra Energy"}
+  ]
+}
+
+User prompt: "Make it focus only on U.S. solar companies and limit it to 8 stocks"
+
+→
+{
+  "name": "U.S. Solar Power Leaders",
+  "theme_summary": "U.S.-based companies advancing solar generation, storage integration, and residential and utility-scale photovoltaic solutions.",
+  "keywords": ["solar energy", "photovoltaics", "clean energy", "solar installers", "solar hardware", "renewable power"],
+  "sectors": ["utilities", "information technology", "industrials"],
+  "regions": ["north america"],
+  "min_market_cap_usd": null,
+  "max_market_cap_usd": null,
+  "risk_preference": null,
+  "count": 8
 }
 """

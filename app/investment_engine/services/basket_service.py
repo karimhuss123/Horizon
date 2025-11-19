@@ -23,7 +23,7 @@ class BasketService:
         criteria = self.ai.generate_intent_query(user_prompt)
         candidate_securities_ids = selector_svc.screen(criteria)
         embedded_query = theme_svc.get_embedded_query(criteria)
-        hits = theme_svc.vector_search_within_candidates(query_vec=embedded_query, include_ids=candidate_securities_ids)
+        hits = theme_svc.vector_search_within_candidates(query_vec=embedded_query, include_ids=candidate_securities_ids, limit=criteria["count"])
         weighted_holdings = selector_svc.assign_hybrid_weights(securities=hits)
         weighted_holdings_with_rationale = self.ai.generate_holding_rationales(criteria, weighted_holdings)
         data = {
@@ -44,7 +44,7 @@ class BasketService:
         criteria = self.ai.regenerate_intent_query(regen_data)
         candidate_securities_ids = selector_svc.screen(criteria)
         embedded_query = theme_svc.get_embedded_query(criteria)
-        hits = theme_svc.vector_search_within_candidates(query_vec=embedded_query, include_ids=candidate_securities_ids)
+        hits = theme_svc.vector_search_within_candidates(query_vec=embedded_query, include_ids=candidate_securities_ids, limit=criteria["count"])
         weighted_holdings = selector_svc.assign_hybrid_weights(securities=hits)
         weighted_holdings_with_rationale = self.ai.generate_holding_rationales(criteria, weighted_holdings)
         data = {
@@ -97,11 +97,11 @@ class BasketService:
             "regions": basket.regions
         })
         basket_security_ids = self.baskets.get_basket_security_ids(basket_id, user_id)
-        add_hits = theme_svc.vector_search_within_candidates(basket.description_embedding, include_ids=candidate_ids, exclude_ids=basket_security_ids)
+        add_hits = theme_svc.vector_search_within_candidates(query_vec=basket.description_embedding, include_ids=candidate_ids, exclude_ids=basket_security_ids)
         news_svc.process_news_for_securities(add_hits)
-        top_5_suggestions = sim_svc.get_top_k_suggestions(basket.description_embedding, add_hits, k=5)
-        top_5_suggestions_with_rationales = self.ai.generate_suggestion_rationales(basket, top_5_suggestions)
-        return top_5_suggestions_with_rationales
+        top_k_suggestions = sim_svc.get_top_k_suggestions(basket.description_embedding, add_hits)
+        top_k_suggestions_with_rationales = self.ai.generate_suggestion_rationales(basket, top_k_suggestions)
+        return top_k_suggestions_with_rationales
     
     def accept_regeneration(self, regeneration_id, user_id):
         return self.regenerations.accept_regeneration(regeneration_id, user_id)

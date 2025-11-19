@@ -1,14 +1,18 @@
-from pydantic import BaseModel, Field, ConfigDict, model_validator
-from typing import List, Optional
+from pydantic import BaseModel, Field, ConfigDict, StringConstraints
+from typing import Optional, Annotated
+
+TickerStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=20)]
+RationaleStr = Annotated[str, StringConstraints(strip_whitespace=True, max_length=1000)]
 
 class HoldingIn(BaseModel):
-    ticker: str = Field(..., min_length=1)
+    ticker: TickerStr
     weight_pct: float = Field(..., ge=0.01)
-    rationale: Optional[str] = Field(None, max_length=1000)
+    rationale: Optional[RationaleStr] = None
+    model_config = ConfigDict(extra="forbid")
 
 class HoldingOut(BaseModel):
     model_config = ConfigDict(from_attributes=True, use_enum_values=True)
-    ticker: Optional[str]
-    name: Optional[str]
-    weight_pct: float
+    ticker: str
+    name: str
+    weight_pct: float = Field(..., ge=0.01, le=100)
     rationale: Optional[str] = None

@@ -3,6 +3,7 @@ from clients.openai_client import OpenAIClient
 from db.models import Security
 from sqlalchemy import select, text
 from investment_engine.utils.math.similarity_backend import sa_bind_vector, sa_cosine_similarity_expr
+from core.config import settings
 
 class ThemeService:
     def __init__(self, db: Session, client: OpenAIClient):
@@ -17,13 +18,18 @@ class ThemeService:
         return self.client.get_embeddings(query)
     
     def vector_search_within_candidates(
-        self, 
-        query_vec: list[float], 
+        self,
+        query_vec: list[float],
+        limit: int = None,
         include_ids: list[int] | None = None, 
-        exclude_ids: list[int] | None = None, 
-        limit: int = 10, 
+        exclude_ids: list[int] | None = None,  
         probes: int = 10
     ):
+        
+        if not limit:
+            limit = settings.DEFAULT_HOLDINGS_COUNT
+        else:
+            limit = min(settings.MAX_HOLDINGS_COUNT, limit)
         
         q_param = sa_bind_vector("q", query_vec)
         

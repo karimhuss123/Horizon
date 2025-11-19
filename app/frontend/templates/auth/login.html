@@ -48,6 +48,7 @@
                         <input
                             type="email"
                             id="emailInput"
+                            maxlength="254"
                             required
                             placeholder="you@example.com"
                             class="w-full rounded-xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white placeholder-slate-500 shadow-inner shadow-black/30 outline-none focus:border-teal-400/60"
@@ -88,6 +89,13 @@
                         Verify
                     </button>
                     <button
+                        id="resendCode"
+                        type="button"
+                        class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm font-semibold text-slate-300 shadow-inner shadow-black/20 transition hover:bg-slate-800/60"
+                    >
+                        Resend Code
+                    </button>
+                    <button
                         id="backToEmail"
                         type="button"
                         class="w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-2.5 text-sm font-semibold text-slate-300 shadow-inner shadow-black/20 transition hover:bg-slate-800/60"
@@ -110,19 +118,15 @@
     <script>
         const emailForm = document.getElementById('emailForm');
         const codeForm = document.getElementById('codeForm');
-
         const emailInput = document.getElementById('emailInput');
         const codeInput = document.getElementById('codeInput');
-
         const statusMsg = document.getElementById('statusMsg');
-
         let savedEmail = "";
 
         emailForm.addEventListener('submit', async function (e) {
             e.preventDefault();
             savedEmail = emailInput.value.trim();
             statusMsg.textContent = '';
-
             try {
                 const res = await fetch('/auth/code/request', {
                     method: 'POST',
@@ -138,7 +142,6 @@
                     if (codeEmailSpan) {
                         codeEmailSpan.textContent = savedEmail;
                     }
-                    statusMsg.textContent = 'If you don’t receive an email, please click "Go Back" and submit your email again.';
                 } else {
                     console.error("Error requesting code");
                     statusMsg.textContent = 'Something went wrong requesting your code. Please try again.';
@@ -151,35 +154,59 @@
 
         codeForm.addEventListener('submit', async function (e) {
             e.preventDefault();
-
             const code = codeInput.value.trim();
             statusMsg.textContent = '';
-
             try {
                 const res = await fetch('/auth/code/verify', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: savedEmail, code })
                 });
-
-                if (res.ok) {
-                    window.location.href = "/";
-                } else {
-                    console.error("Invalid code");
-                    statusMsg.textContent = 'Invalid code. Please check the code and try again. If the problem persists, you can go back and request a new code.';
+                const data = await res.json();
+                if (!res.ok) {
+                    if (data.detail && data.detail.message) {
+                        statusMsg.textContent = data.detail.message;
+                    } else {
+                        statusMsg.textContent = "Invalid email or code.";
+                    }
+                    return;
                 }
+                window.location.href = '/';
             } catch (err) {
                 console.error(err);
                 statusMsg.textContent = 'Network error. Please try again.';
             }
         });
 
+        document.getElementById('resendCode').addEventListener('click', async () => {
+            try {
+                const res = await fetch('/auth/code/request', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: savedEmail })
+                });
+                const data = await res.json()
+                if (res.ok) {
+                    if (data.detail && data.detail.message) {
+                        statusMsg.textContent = data.detail.message;
+                    } else {
+                        statusMsg.textContent = "A new code has been sent to your email.";
+                    }
+                } else {
+                    console.error("Error requesting code");
+                    statusMsg.textContent = 'Something went wrong resending your code. Please try again.';
+                }
+            } catch (err) {
+                console.error(err);
+                statusMsg.textContent = 'Network error. Please try again.';
+            }
+        })
+
         document.getElementById('backToEmail').addEventListener('click', () => {
             savedEmail = "";
             emailInput.value = "";
             codeInput.value = "";
             statusMsg.textContent = "";
-
             codeForm.style.display = 'none';
             emailForm.style.display = 'block';
         });

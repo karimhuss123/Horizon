@@ -4,13 +4,14 @@ from market_data.repositories.security_repo import SecurityRepo
 from db.utils.time import current_datetime_utc
 from datetime import timezone
 import math
+from core.config import settings
 
 class SimilarityService:
     def __init__(self, db: Session):
         self.db = db
         self.securities = SecurityRepo(db)
     
-    def get_top_k_suggestions(self, theme_embedding, securities, k=5):
+    def get_top_k_suggestions(self, theme_embedding, securities, k=settings.AI_SUGGESTIONS_COUNT):
         blocks, meta = self._collect_news_blocks(securities)
         if not blocks:
             return []

@@ -21,6 +21,6 @@ def generate_code_hash(code):
 def create_access_token(data: dict) -> str:
     to_encode = data.copy()
     now = current_datetime_utc()
-    expire = add_to_datetime(dt=now, minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = add_to_datetime(dt=now, days=settings.ACCESS_TOKEN_EXPIRY_DAYS)
     to_encode.update({"exp": expire, "iat": now})
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)

@@ -43,6 +43,7 @@
                 </label>
                 <textarea
                     id="message"
+                    maxlength="1000"
                     rows="4"
                     class="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white placeholder-slate-500 shadow-inner shadow-black/30 outline-none focus:border-teal-400/60"
                     placeholder="Describe your idea... (e.g., “AI infrastructure”, “Clean energy leaders”)"
@@ -100,11 +101,11 @@
 <script>
     // --- Elements
     const submitBtn = document.getElementById('submitBtn');
-    const textarea  = document.getElementById('message');
-    const statusEl  = document.getElementById('status');
-    const listEl    = document.getElementById('basketList');
-    const emptyEl   = document.getElementById('emptyState');
-    const tabBtns   = document.querySelectorAll('.tab-btn');
+    const textarea = document.getElementById('message');
+    const statusEl = document.getElementById('status');
+    const listEl = document.getElementById('basketList');
+    const emptyEl = document.getElementById('emptyState');
+    const tabBtns = document.querySelectorAll('.tab-btn');
 
     // --- State
     let allBaskets = [];
@@ -215,6 +216,11 @@
             statusEl.textContent = 'Please enter a prompt.';
             return;
         }
+        if (user_prompt.length < 10) {
+            statusEl.textContent = 'Prompt must be at least 10 characters.';
+            return;
+        }
+
         statusEl.textContent = '';
         submitBtn.textContent = 'Generating...';
         submitBtn.disabled = true;
@@ -225,8 +231,15 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user_prompt })
             });
-            if (!res.ok) throw new Error(`Server error ${res.status}`);
-            await res.json();
+            const data = await res.json();
+            if (!res.ok) {
+                if (data.detail && data.detail.message) {
+                    statusEl.textContent = data.detail.message;
+                } else {
+                    statusEl.textContent = "Saving failed.";
+                }
+                return
+            };
             textarea.value = '';
             await fetchAllBaskets();
             setActiveTab('Draft');

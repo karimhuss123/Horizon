@@ -15,6 +15,10 @@ class Settings(BaseSettings):
     RATIONALE_TEMP: float = 0.25
     BASKET_SUGGESTION_TEMP: float = 0.25
     
+    MAX_HOLDINGS_COUNT: int = 25
+    DEFAULT_HOLDINGS_COUNT: int = 10
+    AI_SUGGESTIONS_COUNT: int = 5
+    
     RESEND_API_KEY: str | None = None
     RESEND_NO_REPLY_DEFAULT_SENDER: str | None = None
     
@@ -22,7 +26,7 @@ class Settings(BaseSettings):
     LOGIN_CODE_MINUTES_TO_EXPIRY: int = 10
     SECRET_KEY: str | None = None
     JWT_ALGORITHM: str | None = None
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 5      # 5 days
+    ACCESS_TOKEN_EXPIRY_DAYS: int = 5
     
     MAIL_USERNAME: EmailStr
     MAIL_PASSWORD: str

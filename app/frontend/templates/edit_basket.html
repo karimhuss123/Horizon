@@ -64,6 +64,7 @@
                                 <label class="mb-1 block text-sm font-medium text-slate-200">Name</label>
                                 <input
                                     id="nameInput"
+                                    maxlength="200"
                                     type="text"
                                     class="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2 text-sm text-white placeholder-slate-500 shadow-inner shadow-black/30 outline-none focus:border-teal-400/60"
                                     value="{{ basket.name or 'Untitled Basket' }}"
@@ -74,6 +75,7 @@
                                 <label class="mb-1 block text-sm font-medium text-slate-200">Description / Thesis</label>
                                 <textarea
                                     id="descInput"
+                                    maxlength="1500"
                                     rows="3"
                                     class="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2 text-sm text-white placeholder-slate-500 shadow-inner shadow-black/30 outline-none focus:border-teal-400/60"
                                     placeholder="What’s the investment idea?"
@@ -162,6 +164,7 @@
                                             <td class="px-3 py-2">
                                                 <input
                                                     type="text"
+                                                    maxlength="1000"
                                                     class="rationale w-full rounded-lg border border-white/15 bg-slate-950/80 px-2 py-1.5 text-sm text-slate-100 shadow-inner shadow-black/30 outline-none focus:border-teal-400/60"
                                                     value="{{ h.rationale or '' }}"
                                                 />
@@ -222,6 +225,7 @@
                         <h2 class="text-lg font-semibold text-white">Reprompt</h2>
                         <textarea
                             id="userPrompt"
+                            maxlength="1000"
                             rows="5"
                             class="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2 text-sm text-white placeholder-slate-500 shadow-inner shadow-black/30 outline-none focus:border-teal-400/60"
                             placeholder="Describe your idea..."
@@ -293,9 +297,9 @@
     function updateTotals() {
         const count = tbody.querySelectorAll('tr').length;
         const total = sumWeights();
-        totalWeightSpan.textContent = total.toFixed(2) + '%';
+        totalWeightSpan.textContent = Number(total.toFixed(2)) + '%';
         totalsEl.firstChild.nodeValue = `Holdings: ${count} • Total weight: `;
-        if (total != 100) {
+        if (Math.abs(total - 100) > 0.005) {
             weightWarning.classList.remove('hidden');
         } else {
             weightWarning.classList.add('hidden');
@@ -326,6 +330,7 @@
             <td class="px-3 py-2">
                 <input
                     type="text"
+                    maxlength="1000"
                     class="rationale w-full rounded-lg border border-white/15 bg-slate-950/80 px-2 py-1.5 text-sm text-slate-100 shadow-inner shadow-black/30 outline-none focus:border-teal-400/60"
                     value="${h.rationale || ''}"
                 />
@@ -362,6 +367,26 @@
         return rows;
     }
 
+    function validateHoldings(holdings) {
+        const errors = [];
+        holdings.forEach((h, index) => {
+            const ticker = (h.ticker || "").trim();
+            const weight = Number(h.weight_pct);
+
+            if (!ticker) {
+                errors.push(`Row ${index + 1}: Ticker cannot be empty.`);
+            }
+            if (isNaN(weight) || weight <= 0) {
+                errors.push(`Row ${index + 1}: Weight must be a number greater than 0.`);
+            }
+        });
+        return {
+            valid: errors.length === 0,
+            errors
+        };
+    }
+
+
     function normalizeWeights() {
         const rows = tbody.querySelectorAll('tr');
         if (rows.length === 0) return;
@@ -376,11 +401,27 @@
     }
 
     async function save(status) {
+        const nameInputValue = nameInput.value.trim()
+        const descInputValue = descInput.value.trim()
+        const holdingsList = getHoldingsFromTable()
+        const { valid, errors } = validateHoldings(holdingsList);
+        if (!valid) {
+            actionStatus.textContent = errors.join(" ");
+            return;
+        }
+        if (!nameInputValue) {
+            actionStatus.textContent = 'Basket name cannot be empty.';
+            return
+        }
+        if (descInputValue.length < 10) {
+            actionStatus.textContent = 'Basket description must be at least 10 characters.';
+            return
+        }
         actionStatus.textContent = 'Saving...';
         const payload = {
             id: basketId,
-            name: nameInput.value.trim(),
-            description: descInput.value.trim(),
+            name: nameInputValue,
+            description: descInputValue,
             status: status,
             holdings: getHoldingsFromTable(),
         };
@@ -391,7 +432,15 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(payload)
             });
-            if (!res.ok) throw new Error(`Save failed (${res.status})`);
+            const data = await res.json();
+            if (!res.ok) {
+                if (data.detail && data.detail.message) {
+                    actionStatus.textContent = data.detail.message;
+                } else {
+                    actionStatus.textContent = "Saving failed.";
+                }
+                return
+            };
             window.location.href = `/`;
         } catch (e) {
             console.error(e);
@@ -479,8 +528,13 @@
             newBasketCard.innerHTML = '<p class="text-xs text-slate-400">Please enter a prompt.</p>';
             return;
         }
+        if (user_prompt.length < 10) {
+            newBasketCard.innerHTML = '<p class="text-xs text-slate-400">Prompt must be at least 10 characters.</p>';
+            return;
+        }
 
         newBasketCard.innerHTML = '';
+        newBasketCard.className = '';
         generateBtn.textContent = 'Generating...';
         generateBtn.disabled = true;
         try {
@@ -496,12 +550,19 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(payload)
             });
-            if (!res.ok) throw new Error(`POST /baskets/regenerate -> ${res.status}`);
             const data = await res.json();
+            if (!res.ok) {
+                if (data.detail && data.detail.message) {
+                    newBasketCard.innerHTML = `<p class="text-xs text-slate-400">${data.detail.message}</p>`;
+                } else {
+                    newBasketCard.innerHTML = `<p class="text-xs text-slate-400">Failed to regenerate.</p>`;
+                }
+                return
+            };
             renderSuggestedBasket(data);
         } catch (e) {
             console.error(e);
-            newBasketCard.innerHTML = '<p class="text-xs text-slate-400">No suggested basket available.</p>';
+            newBasketCard.innerHTML = '<p class="text-xs text-slate-400">Failed to regenerate.</p>';
         } finally {
             generateBtn.textContent = 'Generate';
             generateBtn.disabled = false;
@@ -595,10 +656,10 @@
             descInput.value = suggested_basket.description || '';
             tbody.innerHTML = '';
             suggested_basket.holdings.forEach(h => addRow(h));
-            updateTotals();
             card.className = '';
             card.innerHTML = '<p class="text-xs text-slate-400">Suggested basket accepted into editor.</p>';
             userPrompt.value = '';
+            updateTotals();
         };
         document.getElementById('suggestRejectBtn').onclick = async () => {
             actionStatus.textContent = 'Rejecting...';
@@ -624,8 +685,10 @@
         suggestionsRefreshBtn.textContent = 'Fetching...';
         suggestionsRefreshBtn.disabled = true;
         try {
-            const res = await fetch(`/baskets/get-suggestions?basket_id=${basketId}`, {
-                method: 'GET'
+            const res = await fetch('/baskets/get-suggestions', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ basket_id: basketId })
             });
             if (!res.ok) throw new Error(`POST /baskets/get-suggestions -> ${res.status}`);
             const data = await res.json();
