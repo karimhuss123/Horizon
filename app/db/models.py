@@ -25,6 +25,7 @@ class User(Base):
     is_verified = Column(Boolean, default=False, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime(timezone=True), default=current_datetime_et)
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
     
     baskets = relationship("Basket", back_populates="user", cascade="all, delete-orphan")
     login_codes = relationship("LoginCode", back_populates="user", cascade="all, delete-orphan")
@@ -51,6 +52,7 @@ class Basket(Base):
     initial_user_prompt = Column(String, nullable=False)
     description = Column(String)
     description_embedding = Column(Vector(1536))
+    basket_fingerprint = Column(String, nullable=True)
     status = Column(Enum(BasketStatus))
 
     keywords = Column(ARRAY(String), nullable=True)
@@ -63,6 +65,7 @@ class Basket(Base):
     
     created_at = Column(DateTime(timezone=True), default=current_datetime_et)
     updated_at = Column(DateTime(timezone=True), onupdate=current_datetime_et)
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
 
     user = relationship("User", back_populates="baskets")
     holdings = relationship("Holding", back_populates="basket", cascade="all, delete-orphan")
@@ -74,6 +77,7 @@ class Regeneration(Base):
     
     id = Column(Integer, primary_key=True)
     basket_id = Column(Integer, ForeignKey("baskets.id", ondelete="CASCADE"))
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     regeneration_user_prompt = Column(String, nullable=False)
     
     initial_basket_name = Column(String, nullable=False)
@@ -108,6 +112,21 @@ class Holding(Base):
     basket = relationship("Basket", back_populates="holdings")
     security = relationship("Security", back_populates="holdings")
 
+class BasketSuggestion(Base):
+    __tablename__ = "basket_suggestions"
+    id = Column(Integer, primary_key=True)
+    basket_id = Column(Integer, ForeignKey("baskets.id", ondelete="CASCADE"))
+    security_id = Column(Integer, ForeignKey("securities.id"))
+    news_id = Column(Integer, ForeignKey("news.id"))
+    
+    rationale = Column(String)
+    score = Column(Float)
+    action = Column(String)
+    created_at = Column(DateTime(timezone=True), default=current_datetime_et)
+    
+    news = relationship("News")
+    security = relationship("Security")
+    basket = relationship("Basket", back_populates="suggestions")
 
 class Security(Base):
     __tablename__ = "securities"
@@ -127,22 +146,6 @@ class Security(Base):
     
     news = relationship("News", back_populates="security", cascade="all, delete-orphan", single_parent=True)
     holdings = relationship("Holding", back_populates="security")
-
-class BasketSuggestion(Base):
-    __tablename__ = "basket_suggestions"
-    id = Column(Integer, primary_key=True)
-    basket_id = Column(Integer, ForeignKey("baskets.id", ondelete="CASCADE"))
-    security_id = Column(Integer, ForeignKey("securities.id"))
-    news_id = Column(Integer, ForeignKey("news.id"))
-    
-    rationale = Column(String)
-    score = Column(Float)
-    action = Column(String)
-    created_at = Column(DateTime(timezone=True), default=current_datetime_et)
-    
-    news = relationship("News")
-    security = relationship("Security")
-    basket = relationship("Basket", back_populates="suggestions")
 
 class News(Base):
     __tablename__ = "news"

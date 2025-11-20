@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from db.models import LoginCode, User
 from db.utils.time import current_datetime_et, add_to_datetime
 from core.config import settings
+from db.utils.time import get_today_date, day_bounds_from_date
 
 class LoginCodeRepo:
     def __init__(self, db: Session):
@@ -74,3 +75,16 @@ class LoginCodeRepo:
             )
         )
         self.db.commit()
+    
+    def get_login_code_count_today(self, user_id):
+        today = get_today_date()
+        day_start, day_end = day_bounds_from_date(today)
+        return (
+            self.db.query(LoginCode)
+            .filter(
+                LoginCode.user_id == user_id,
+                LoginCode.created_at >= day_start,
+                LoginCode.created_at < day_end
+            )
+            .count()
+        )

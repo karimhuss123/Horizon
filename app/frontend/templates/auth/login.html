@@ -133,7 +133,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: savedEmail })
                 });
-
+                const data = await res.json()
                 if (res.ok) {
                     // Move to Step 2
                     emailForm.style.display = 'none';
@@ -143,8 +143,11 @@
                         codeEmailSpan.textContent = savedEmail;
                     }
                 } else {
-                    console.error("Error requesting code");
-                    statusMsg.textContent = 'Something went wrong requesting your code. Please try again.';
+                    if (data.detail && data.detail.message) {
+                        statusMsg.textContent = data.detail.message;
+                    } else {
+                        statusMsg.textContent = "Something went wrong requesting your code. Please try again.";
+                    }
                 }
             } catch (err) {
                 console.error(err);
@@ -193,8 +196,11 @@
                         statusMsg.textContent = "A new code has been sent to your email.";
                     }
                 } else {
-                    console.error("Error requesting code");
-                    statusMsg.textContent = 'Something went wrong resending your code. Please try again.';
+                    if (data.detail && data.detail.message) {
+                        statusMsg.textContent = data.detail.message;
+                    } else {
+                        statusMsg.textContent = "Something went wrong resending your code. Please try again.";
+                    }
                 }
             } catch (err) {
                 console.error(err);

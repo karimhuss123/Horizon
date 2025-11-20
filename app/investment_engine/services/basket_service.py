@@ -1,12 +1,12 @@
 from sqlalchemy.orm import Session
 from investment_engine.services.selector_service import SelectorService
 from investment_engine.services.theme_service import ThemeService
-from investment_engine.services.similarity_service import SimilarityService
 from investment_engine.repositories.basket_repo import BasketRepo
 from investment_engine.repositories.regeneration_repo import RegenerationRepo
 from investment_engine.repositories.basket_suggestion_repo import BasketSuggestionRepo
-from market_data.services.news_service import NewsService
+from investment_engine.utils.fingerprint import compute_basket_fingerprint
 from core.errors.messages import messages
+from core.config import settings
 from fastapi import HTTPException, status
 import json
 
@@ -21,6 +21,8 @@ class BasketService:
     def generate_basket(self, user_prompt, user_id):
         if not self.ai:
             raise RuntimeError("AIService is not initialized for BasketService.")
+        if self.baskets.get_baskets_created_today_count(user_id) >= settings.BASKET_GENERATION_DAILY_LIMIT:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"message": messages.baskets_generation_daily_limit})
         selector_svc = SelectorService(self.db)
         theme_svc = ThemeService(self.db, self.ai.client)
         criteria = self.ai.generate_intent_query(user_prompt)
@@ -39,13 +41,18 @@ class BasketService:
             "holdings": weighted_holdings_with_rationale
         }
         basket = self.baskets.create_draft_basket(data)
+        fingerprint = compute_basket_fingerprint(basket)
+        self.baskets.update_basket_fingerprint(basket.id, fingerprint, user_id)
         return basket
     
     def regenerate_basket(self, regen_data, user_id):
         if not self.ai:
             raise RuntimeError("AIService is not initialized for BasketService.")
+        if self.regenerations.get_basket_regenerations_today_count(user_id) >= settings.BASKET_REGENERATION_DAILY_LIMIT:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"message": messages.baskets_regeneration_daily_limit})
         selector_svc = SelectorService(self.db)
         theme_svc = ThemeService(self.db, self.ai.client)
+        basket = self.baskets.get(id=regen_data.id, user_id=user_id) # validate basket existence
         criteria = self.ai.regenerate_intent_query(regen_data)
         if criteria.get("error") == "invalid_user_prompt":
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"message": messages.meaningless_user_prompt})
@@ -55,7 +62,7 @@ class BasketService:
         weighted_holdings = selector_svc.assign_hybrid_weights(securities=hits)
         weighted_holdings_with_rationale = self.ai.generate_holding_rationales(criteria, weighted_holdings)
         data = {
-            "basket_id": regen_data.id,
+            "basket_id": basket.id,
             "regeneration_user_prompt": regen_data.user_prompt,
             "initial_basket_name": regen_data.name,
             "initial_basket_description": regen_data.description,
@@ -82,14 +89,20 @@ class BasketService:
         return self.baskets.delete(id, user_id)
     
     def edit_basket(self, basket, user_id):
+        existing_basket = self.baskets.get(id=basket.id, user_id=user_id) # validates basket
+        new_fingerprint = compute_basket_fingerprint(basket)
+        if existing_basket.basket_fingerprint == new_fingerprint:
+            return self.baskets.update(basket=basket, user_id=user_id, metadata=None, description_embedding=None)
         theme_svc = ThemeService(self.db, self.ai.client)
         metadata = self.ai.generate_basket_metadata(basket)
-        embedded_query = theme_svc.get_embedded_query({
+        description_embedding = theme_svc.get_embedded_query({
             "theme_summary": basket.description,
             "keywords": metadata.get("keywords", []),
             "sectors": metadata.get("sectors", [])
-        })    
-        return self.baskets.update(basket, metadata, user_id, embedded_query)
+        })
+        updated = self.baskets.update(basket=basket, user_id=user_id, metadata=metadata, description_embedding=description_embedding)
+        self.baskets.update_basket_fingerprint(id=basket.id, fingerprint=new_fingerprint, user_id=user_id)
+        return updated
     
     def accept_regeneration(self, regeneration_id, user_id):
         return self.regenerations.accept_regeneration(regeneration_id, user_id)

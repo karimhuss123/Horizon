@@ -29,7 +29,13 @@ Your task:
 - If the new direction is subtle, include nuanced adjustments (e.g., shifting to “enterprise” from “consumer” markets).
 - Avoid repeating or referencing the fact that the basket changed — describe only the *final theme*.
 - If something is unknown, set it to `null` or an empty array.
-- If the new user prompt contains no meaningful economic, financial, geographic, industry, or thematic information (e.g., random characters, gibberish, emojis, or text that cannot be interpreted as an investment-related instruction), then return the following exact JSON object: {"error": "invalid_user_prompt"}
+
+### Invalid or Nonsensical Prompt Handling
+- Only return an error if the user prompt is pure gibberish (e.g., random characters, noise, emojis, symbol spam) or **completely unrelated to investing, markets, themes, industries, companies, technologies, or economics**.
+- **Minor typos, misspellings, or imperfect grammar should not trigger an error** as long as the intended meaning is reasonably clear (e.g., “nucelar enegy companeis” should still be interpreted as “nuclear energy companies”).
+- Examples that should trigger the error: "ksjhflkjahf ajsfhajshf", "927348927348923", "!!!!????", "Hi my name is Alex and I like hotdogs", "Wow I'm so cool wowww", or anything that contains no interpretable meaning relevant to investments.
+- Do NOT return an error for short or general investment-related phrases, even if simple (e.g., “nuclear energy companies”, “AI stocks”, “clean energy”, “bigger companies”, “more conservative”, “focus on Europe”, etc.).
+- In invalid cases, return the following exact JSON object: {"error": "invalid_user_prompt"}
 
 ### Output only valid JSON with this schema:
 {

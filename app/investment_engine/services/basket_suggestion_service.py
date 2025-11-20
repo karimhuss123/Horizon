@@ -3,11 +3,8 @@ from investment_engine.services.selector_service import SelectorService
 from investment_engine.services.theme_service import ThemeService
 from investment_engine.services.similarity_service import SimilarityService
 from investment_engine.repositories.basket_repo import BasketRepo
-from investment_engine.repositories.regeneration_repo import RegenerationRepo
 from investment_engine.repositories.basket_suggestion_repo import BasketSuggestionRepo
 from market_data.services.news_service import NewsService
-from fastapi import HTTPException, status
-import json
 
 class BasketSuggestionService:
     def __init__(self, db: Session, ai=None):

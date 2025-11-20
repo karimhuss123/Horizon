@@ -132,59 +132,59 @@
     }
 
     function renderList() {
-    listEl.innerHTML = '';
-    const items = allBaskets.filter(b => (b.status || 'Active') === activeFilter);
+        listEl.innerHTML = '';
+        const items = allBaskets.filter(b => (b.status || 'Active') === activeFilter);
 
-    if (items.length === 0) {
-        emptyEl.classList.remove('hidden');
-        return;
-    }
-    emptyEl.classList.add('hidden');
+        if (items.length === 0) {
+            emptyEl.classList.remove('hidden');
+            return;
+        }
+        emptyEl.classList.add('hidden');
 
-    items.forEach(b => {
-        const card = document.createElement('div');
-        card.className =
-        'group cursor-pointer rounded-2xl border border-white/10 bg-slate-900/60 p-4 transition ' +
-        'hover:border-teal-400/60 hover:bg-slate-900/80';
+        items.forEach(b => {
+            const card = document.createElement('div');
+            card.className =
+            'group cursor-pointer rounded-2xl border border-white/10 bg-slate-900/60 p-4 transition ' +
+            'hover:border-teal-400/60 hover:bg-slate-900/80';
 
-        const holdingsCount = Array.isArray(b.holdings) ? b.holdings.length : 0;
-        const desc = b.description || '';
-        const status = b.status || 'Draft';
-        const statusClass =
-        status === 'Active'
-            ? 'border-teal-500/40 bg-teal-500/15 text-teal-300'
-            : 'border-slate-600/60 bg-slate-800/80 text-slate-300';
+            const holdingsCount = Array.isArray(b.holdings) ? b.holdings.length : 0;
+            const desc = b.description || '';
+            const status = b.status || 'Draft';
+            const statusClass =
+            status === 'Active'
+                ? 'border-teal-500/40 bg-teal-500/15 text-teal-300'
+                : 'border-slate-600/60 bg-slate-800/80 text-slate-300';
 
-        card.innerHTML = `
-            <div class="flex items-start justify-between gap-4">
-                <div>
-                <div class="text-base font-semibold text-white">
-                    ${b.name || 'Untitled Basket'}
+            card.innerHTML = `
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                    <div class="text-base font-semibold text-white">
+                        ${b.name || 'Untitled Basket'}
+                    </div>
+                    <div class="mt-1 text-sm text-slate-300/90 line-clamp-2">
+                        ${desc}
+                    </div>
+                    </div>
+                    <div class="shrink-0">
+                    <span class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${statusClass}">
+                        ${status}
+                    </span>
+                    </div>
                 </div>
-                <div class="mt-1 text-sm text-slate-300/90 line-clamp-2">
-                    ${desc}
+                <div class="mt-3 text-xs text-slate-400">
+                    Holdings:
+                    <span class="font-semibold text-slate-200">${holdingsCount}</span>
                 </div>
-                </div>
-                <div class="shrink-0">
-                <span class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${statusClass}">
-                    ${status}
-                </span>
-                </div>
-            </div>
-            <div class="mt-3 text-xs text-slate-400">
-                Holdings:
-                <span class="font-semibold text-slate-200">${holdingsCount}</span>
-            </div>
-        `;
+            `;
 
-        card.addEventListener('click', () => {
-            const id = b.id;
-            if (!id) return;
-            window.location.href = `/baskets/details?basket_id=${encodeURIComponent(id)}`;
+            card.addEventListener('click', () => {
+                const id = b.id;
+                if (!id) return;
+                window.location.href = `/baskets/details?basket_id=${encodeURIComponent(id)}`;
+            });
+
+            listEl.appendChild(card);
         });
-
-        listEl.appendChild(card);
-    });
     }
 
     async function fetchAllBaskets() {

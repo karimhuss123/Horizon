@@ -57,4 +57,4 @@ def delete(db: Session = Depends(get_db), current_user = Depends(require_login))
     response.delete_cookie("access_token")
     return response
 
-# LATER ON: Implement refresh tokens
+# Later: Implement refresh tokens

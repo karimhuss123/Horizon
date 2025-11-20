@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session, selectinload
 from db.models import Basket, Holding, Security, BasketStatus
 from fastapi import HTTPException
+from db.utils.time import current_datetime_et, get_today_date, day_bounds_from_date
 
 class BasketRepo:
     def __init__(self, db: Session):
@@ -18,7 +19,7 @@ class BasketRepo:
             market_cap_min_usd = data["criteria"]["min_market_cap_usd"],
             market_cap_max_usd = data["criteria"]["max_market_cap_usd"],
             description_embedding = data["embedded_query"],
-            status = BasketStatus.DRAFT
+            status = BasketStatus.DRAFT,
         )
         self.db.add(basket)
         self.db.flush()
@@ -46,7 +47,7 @@ class BasketRepo:
     def get_all(self, user_id):
         baskets = (
             self.db.query(Basket)
-            .filter_by(user_id=user_id)
+            .filter(Basket.user_id==user_id, Basket.deleted_at.is_(None))
             .options(
                 selectinload(Basket.holdings).selectinload(Holding.security)
             )
@@ -58,7 +59,7 @@ class BasketRepo:
     def get(self, id, user_id):
         basket = (
             self.db.query(Basket)
-            .filter_by(id=id, user_id=user_id)
+            .filter(Basket.id==id, Basket.user_id==user_id, Basket.deleted_at.is_(None))
             .options(
                 selectinload(Basket.holdings).selectinload(Holding.security)
             ).first()
@@ -78,35 +79,38 @@ class BasketRepo:
                 out.append(sid)
         return out
     
+    def get_baskets_created_today_count(self, user_id):
+        today = get_today_date()
+        day_start, day_end = day_bounds_from_date(today)
+        return (
+            self.db.query(Basket)
+            .filter(
+                Basket.user_id == user_id,
+                Basket.created_at >= day_start,
+                Basket.created_at < day_end
+            )
+            .count()
+        )
+    
     def accept_draft(self, id, user_id):
         basket = self.get(id, user_id)
-        if not basket:
-            return RuntimeError("Basket does not exist.")
         basket.status = BasketStatus.ACTIVE
         self.db.commit()
         self.db.refresh(basket)
         return basket
     
-    def delete(self, id, user_id):
-        basket = self.get(id, user_id)
-        if not basket:
-            return RuntimeError("Basket does not exist.")
-        self.db.delete(basket)
-        self.db.commit()
-    
-    def update(self, basket, metadata, user_id, description_embedding = None):
+    def update(self, basket, user_id, metadata=None, description_embedding = None):
         basket_obj = self.get(basket.id, user_id)
-        if not basket_obj:
-            raise RuntimeError("Basket does not exist.")
         try:
             basket_obj.name = basket.name
             basket_obj.description = basket.description
-            basket_obj.keywords = metadata.get('keywords', [])
-            basket_obj.sectors = metadata.get('sectors', [])
-            basket_obj.regions = metadata.get('regions', [])
-            basket_obj.market_cap_min_usd = metadata.get('min_market_cap_usd', None)
-            basket_obj.market_cap_max_usd = metadata.get('max_market_cap_usd', None)
             basket_obj.status = BasketStatus(basket.status)
+            if metadata:
+                basket_obj.keywords = metadata.get('keywords', [])
+                basket_obj.sectors = metadata.get('sectors', [])
+                basket_obj.regions = metadata.get('regions', [])
+                basket_obj.market_cap_min_usd = metadata.get('min_market_cap_usd', None)
+                basket_obj.market_cap_max_usd = metadata.get('max_market_cap_usd', None)
             if description_embedding:
                 basket_obj.description_embedding = description_embedding
             self.db.commit()
@@ -137,3 +141,26 @@ class BasketRepo:
         except Exception:
             self.db.rollback()
             raise
+    
+    def delete(self, id, user_id):
+        basket = self.get(id, user_id)
+        basket.deleted_at = current_datetime_et()
+        self.db.commit()
+        return True
+    
+    def delete_all_baskets_for_user(self, user_id):
+        now = current_datetime_et()
+        updated = (
+            self.db.query(Basket)
+            .filter(Basket.user_id == user_id, Basket.deleted_at.is_(None))
+            .update({Basket.deleted_at: now}, synchronize_session=False)
+        )
+        self.db.commit()
+        return updated
+
+    def update_basket_fingerprint(self, id, fingerprint, user_id):
+        basket = self.get(id, user_id)
+        basket.basket_fingerprint = fingerprint
+        self.db.commit()
+        self.db.refresh(basket)
+        return basket

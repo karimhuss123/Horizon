@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session, selectinload
 from db.models import Basket, Regeneration
 from fastapi import HTTPException
-import json
+from db.utils.time import get_today_date, day_bounds_from_date
 
 class RegenerationRepo:
     def __init__(self, db: Session):
@@ -9,6 +9,7 @@ class RegenerationRepo:
     
     def create_regeneration(self, data, user_id):
         regeneration = Regeneration(
+            user_id = user_id,
             basket_id = data["basket_id"],
             regeneration_user_prompt = data["regeneration_user_prompt"],
             initial_basket_name = data["initial_basket_name"],
@@ -22,12 +23,31 @@ class RegenerationRepo:
         self.db.commit()
         return self.get_regeneration_by_id(regeneration.id, user_id)
     
-    def get_regeneration_by_id(self, id, user_id):
-        regeneration = self.db.query(Regeneration).filter_by(id=id).first()
+    def get_regeneration_by_id(self, id: int, user_id: int):
+        regeneration = (
+            self.db.query(Regeneration)
+            .filter(Regeneration.id == id)
+            .first()
+        )
+        if regeneration is None:
+            raise HTTPException(status_code=404, detail="Regeneration not found.")
         basket = regeneration.basket
-        if user_id != basket.user_id:
-            return RuntimeError("Regeneration not found.")
+        if basket is None or basket.deleted_at is not None or basket.user_id != user_id:
+            raise HTTPException(status_code=404, detail="Regeneration not found.")
         return regeneration
+
+    def get_basket_regenerations_today_count(self, user_id):
+        today = get_today_date()
+        day_start, day_end = day_bounds_from_date(today)
+        return (
+            self.db.query(Regeneration)
+            .filter(
+                Regeneration.user_id == user_id,
+                Regeneration.created_at >= day_start,
+                Regeneration.created_at < day_end
+            )
+            .count()
+        )
     
     def accept_regeneration(self, id, user_id):
         regeneration_obj = self.get_regeneration_by_id(id, user_id)

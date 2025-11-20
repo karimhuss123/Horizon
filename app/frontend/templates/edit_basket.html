@@ -417,6 +417,9 @@
     }
 
     async function save(status) {
+        saveActiveBtn.disabled = true;
+        saveDraftBtn.disabled = true;
+
         const nameInputValue = nameInput.value.trim()
         const descInputValue = descInput.value.trim()
         const holdingsList = getHoldingsFromTable()
@@ -461,6 +464,9 @@
         } catch (e) {
             console.error(e);
             actionStatus.textContent = 'Saving failed.';
+        } finally {
+            saveActiveBtn.disabled = false;
+            saveDraftBtn.disabled = false;
         }
     }
 

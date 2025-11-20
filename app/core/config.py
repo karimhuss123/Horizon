@@ -28,6 +28,10 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str | None = None
     ACCESS_TOKEN_EXPIRY_DAYS: int = 5
     
+    LOGIN_CODE_DAILY_LIMIT: int = 10
+    BASKET_GENERATION_DAILY_LIMIT: int = 20
+    BASKET_REGENERATION_DAILY_LIMIT: int = 40
+    
     MAIL_USERNAME: EmailStr
     MAIL_PASSWORD: str
     MAIL_FROM: EmailStr
