@@ -5,7 +5,7 @@ from sqlalchemy.orm import relationship
 import enum
 from db.db import Base
 from pgvector.sqlalchemy import Vector
-from db.utils.time import current_datetime_utc
+from db.utils.time import current_datetime_et
 from sqlalchemy.dialects.postgresql import JSONB
 
 class RiskLevel(enum.Enum):
@@ -24,7 +24,7 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     is_verified = Column(Boolean, default=False, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
-    created_at = Column(DateTime(timezone=True), default=current_datetime_utc)
+    created_at = Column(DateTime(timezone=True), default=current_datetime_et)
     
     baskets = relationship("Basket", back_populates="user", cascade="all, delete-orphan")
     login_codes = relationship("LoginCode", back_populates="user", cascade="all, delete-orphan")
@@ -35,10 +35,10 @@ class LoginCode(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     code_hash = Column(String, nullable=False)
-    expires_at = Column(DateTime, nullable=False)
-    used_at = Column(DateTime, nullable=True)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    used_at = Column(DateTime(timezone=True), nullable=True)
     attempts = Column(Integer, default=0, nullable=False)
-    created_at = Column(DateTime(timezone=True), default=current_datetime_utc)
+    created_at = Column(DateTime(timezone=True), default=current_datetime_et)
 
     user = relationship("User")
 
@@ -61,11 +61,12 @@ class Basket(Base):
     
     # risk_level = Column(Enum(RiskLevel))
     
-    created_at = Column(DateTime(timezone=True), default=current_datetime_utc)
-    updated_at = Column(DateTime(timezone=True), onupdate=current_datetime_utc)
+    created_at = Column(DateTime(timezone=True), default=current_datetime_et)
+    updated_at = Column(DateTime(timezone=True), onupdate=current_datetime_et)
 
     user = relationship("User", back_populates="baskets")
     holdings = relationship("Holding", back_populates="basket", cascade="all, delete-orphan")
+    suggestions = relationship("BasketSuggestion", back_populates="basket", cascade="all, delete-orphan")
     regenerations = relationship("Regeneration", back_populates="basket", cascade="all, delete-orphan")
 
 class Regeneration(Base):
@@ -84,7 +85,7 @@ class Regeneration(Base):
     regenerated_holdings_list = Column(ARRAY(JSONB), nullable=False)
     
     is_accepted = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime(timezone=True), default=current_datetime_utc)
+    created_at = Column(DateTime(timezone=True), default=current_datetime_et)
     
     basket = relationship("Basket", back_populates="regenerations")
 
@@ -127,6 +128,22 @@ class Security(Base):
     news = relationship("News", back_populates="security", cascade="all, delete-orphan", single_parent=True)
     holdings = relationship("Holding", back_populates="security")
 
+class BasketSuggestion(Base):
+    __tablename__ = "basket_suggestions"
+    id = Column(Integer, primary_key=True)
+    basket_id = Column(Integer, ForeignKey("baskets.id", ondelete="CASCADE"))
+    security_id = Column(Integer, ForeignKey("securities.id"))
+    news_id = Column(Integer, ForeignKey("news.id"))
+    
+    rationale = Column(String)
+    score = Column(Float)
+    action = Column(String)
+    created_at = Column(DateTime(timezone=True), default=current_datetime_et)
+    
+    news = relationship("News")
+    security = relationship("Security")
+    basket = relationship("Basket", back_populates="suggestions")
+
 class News(Base):
     __tablename__ = "news"
     
@@ -138,6 +155,6 @@ class News(Base):
     source = Column(String)
     published_at = Column(DateTime(timezone=True))
     text_embedding = Column(Vector(1536))
-    injected_at = Column(DateTime(timezone=True), default=current_datetime_utc)
+    created_at = Column(DateTime(timezone=True), default=current_datetime_et)
     
     security = relationship("Security", back_populates="news")

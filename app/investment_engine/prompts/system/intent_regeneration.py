@@ -29,6 +29,7 @@ Your task:
 - If the new direction is subtle, include nuanced adjustments (e.g., shifting to “enterprise” from “consumer” markets).
 - Avoid repeating or referencing the fact that the basket changed — describe only the *final theme*.
 - If something is unknown, set it to `null` or an empty array.
+- If the new user prompt contains no meaningful economic, financial, geographic, industry, or thematic information (e.g., random characters, gibberish, emojis, or text that cannot be interpreted as an investment-related instruction), then return the following exact JSON object: {"error": "invalid_user_prompt"}
 
 ### Output only valid JSON with this schema:
 {

@@ -5,5 +5,6 @@ class ErrorMessages:
         self.auth_invalid_email_or_code = "Invalid or expired code. Please try again or request a new one."
         self.auth_resend_code_success = "A new code has been sent to your email."
         self.exception_validation_default_message = "Some fields are invalid. Please review your inputs."
+        self.meaningless_user_prompt = "Your prompt couldn’t be understood. Please enter a clear investment instruction."
 
 messages = ErrorMessages()

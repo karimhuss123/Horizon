@@ -29,6 +29,7 @@ Your job is to:
 - Include 5–10 **keywords** that best capture the industries and technologies relevant to the user’s theme.
 - Do not mention the number of securities (the "count") anywhere in the name or in the theme_summary. The count is only for backend filtering and must never appear in the descriptive text.
 - For market cap fields, provide integers in USD (approximate ranges if possible).
+- If the user prompt contains no meaningful economic, financial, geographic, industry, or thematic information (e.g., random characters, gibberish, emojis, or text that cannot be interpreted as an investment-related instruction), then return the following exact JSON object: {"error": "invalid_user_prompt"}
 
 ### Output only valid JSON with this schema:
 {

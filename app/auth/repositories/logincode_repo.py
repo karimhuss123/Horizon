@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from db.models import LoginCode, User
-from db.utils.time import current_datetime_utc, add_to_datetime
+from db.utils.time import current_datetime_et, add_to_datetime
 from core.config import settings
 
 class LoginCodeRepo:
@@ -8,7 +8,7 @@ class LoginCodeRepo:
         self.db = db
     
     def invalidate_old_login_codes(self, user_id):
-        now = current_datetime_utc()
+        now = current_datetime_et()
         (
             self.db.query(LoginCode)
             .filter(
@@ -27,7 +27,7 @@ class LoginCodeRepo:
         self.db.commit()
     
     def generate_new_login_code(self, user_id, code_hash):
-        now = current_datetime_utc()
+        now = current_datetime_et()
         login_code = LoginCode(
             user_id=user_id,
             code_hash=code_hash,
@@ -38,7 +38,7 @@ class LoginCodeRepo:
         return login_code
     
     def get_valid_login_code_for_user(self, user_id):
-        now = current_datetime_utc()
+        now = current_datetime_et()
         return (
             self.db.query(LoginCode)
             .filter(
@@ -62,7 +62,7 @@ class LoginCodeRepo:
         self.db.commit()
     
     def set_login_code_as_used(self, logincode_id):
-        now = current_datetime_utc()
+        now = current_datetime_et()
         (
             self.db.query(LoginCode)
             .filter(LoginCode.id == logincode_id)

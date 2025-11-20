@@ -4,7 +4,9 @@ from investment_engine.services.theme_service import ThemeService
 from investment_engine.services.similarity_service import SimilarityService
 from investment_engine.repositories.basket_repo import BasketRepo
 from investment_engine.repositories.regeneration_repo import RegenerationRepo
+from investment_engine.repositories.basket_suggestion_repo import BasketSuggestionRepo
 from market_data.services.news_service import NewsService
+from core.errors.messages import messages
 from fastapi import HTTPException, status
 import json
 
@@ -14,6 +16,7 @@ class BasketService:
         self.ai = ai
         self.baskets = BasketRepo(db)
         self.regenerations = RegenerationRepo(db)
+        self.suggestions = BasketSuggestionRepo(db)
     
     def generate_basket(self, user_prompt, user_id):
         if not self.ai:
@@ -21,6 +24,8 @@ class BasketService:
         selector_svc = SelectorService(self.db)
         theme_svc = ThemeService(self.db, self.ai.client)
         criteria = self.ai.generate_intent_query(user_prompt)
+        if criteria.get("error") == "invalid_user_prompt":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"message": messages.meaningless_user_prompt})
         candidate_securities_ids = selector_svc.screen(criteria)
         embedded_query = theme_svc.get_embedded_query(criteria)
         hits = theme_svc.vector_search_within_candidates(query_vec=embedded_query, include_ids=candidate_securities_ids, limit=criteria["count"])
@@ -42,6 +47,8 @@ class BasketService:
         selector_svc = SelectorService(self.db)
         theme_svc = ThemeService(self.db, self.ai.client)
         criteria = self.ai.regenerate_intent_query(regen_data)
+        if criteria.get("error") == "invalid_user_prompt":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"message": messages.meaningless_user_prompt})
         candidate_securities_ids = selector_svc.screen(criteria)
         embedded_query = theme_svc.get_embedded_query(criteria)
         hits = theme_svc.vector_search_within_candidates(query_vec=embedded_query, include_ids=candidate_securities_ids, limit=criteria["count"])
@@ -83,25 +90,6 @@ class BasketService:
             "sectors": metadata.get("sectors", [])
         })    
         return self.baskets.update(basket, metadata, user_id, embedded_query)
-    
-    def get_basket_suggestions(self, basket_id, user_id):
-        selector_svc = SelectorService(self.db)
-        theme_svc = ThemeService(self.db, self.ai.client)
-        news_svc = NewsService(self.db, self.ai.client)
-        sim_svc = SimilarityService(self.db)
-        basket = self.baskets.get(basket_id, user_id)
-        candidate_ids = selector_svc.screen({
-            "min_market_cap_usd": basket.market_cap_min_usd,
-            "max_market_cap_usd": basket.market_cap_max_usd,
-            "sectors": basket.sectors,
-            "regions": basket.regions
-        })
-        basket_security_ids = self.baskets.get_basket_security_ids(basket_id, user_id)
-        add_hits = theme_svc.vector_search_within_candidates(query_vec=basket.description_embedding, include_ids=candidate_ids, exclude_ids=basket_security_ids)
-        news_svc.process_news_for_securities(add_hits)
-        top_k_suggestions = sim_svc.get_top_k_suggestions(basket.description_embedding, add_hits)
-        top_k_suggestions_with_rationales = self.ai.generate_suggestion_rationales(basket, top_k_suggestions)
-        return top_k_suggestions_with_rationales
     
     def accept_regeneration(self, regeneration_id, user_id):
         return self.regenerations.accept_regeneration(regeneration_id, user_id)

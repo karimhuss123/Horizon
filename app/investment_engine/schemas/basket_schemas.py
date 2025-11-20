@@ -76,11 +76,3 @@ class BasketResponse(BaseModel):
 class BasketListResponse(BaseModel):
     items: List[BasketResponse]
     total: int
-
-class BasketSuggestionItem(BaseModel):
-    security_id: int
-    ticker: str
-    name: NonEmptyLongStr
-    rationale: NonEmptyLongStr
-    action: str
-    source_url: str

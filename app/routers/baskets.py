@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from db.db import get_db
 from investment_engine.services.basket_service import BasketService
 from investment_engine.services.ai_service import AIService
+from investment_engine.services.basket_suggestion_service import BasketSuggestionService
 from investment_engine.schemas.basket_schemas import (
     BasketRegenerateRequest,
     BasketResponse, 
@@ -12,9 +13,9 @@ from investment_engine.schemas.basket_schemas import (
     BasketIdRequest,
     BasketUpdateRequest,
     BasketRegenerationResponse,
-    BasketSuggestionItem,
     AcceptRegenerationRequest
 )
+from investment_engine.schemas.basket_suggestion_schemas import BasketSuggestionItem
 from clients.openai_client import OpenAIClient
 from fastapi.responses import HTMLResponse
 from typing import List
@@ -80,8 +81,8 @@ def save_edit(payload: BasketUpdateRequest, db: Session = Depends(get_db), curre
 @router.post("/get-suggestions", response_model=List[BasketSuggestionItem], status_code=status.HTTP_200_OK)
 def get_suggestions(payload: BasketIdRequest, db: Session = Depends(get_db), current_user = Depends(require_login)):
     ai_svc = AIService(OpenAIClient())
-    basket_svc = BasketService(db, ai_svc)
-    suggestions = basket_svc.get_basket_suggestions(basket_id=payload.basket_id, user_id=current_user.id)
+    sug_svc = BasketSuggestionService(db, ai_svc)
+    suggestions = sug_svc.get_basket_suggestions(basket_id=payload.basket_id, user_id=current_user.id)
     return suggestions
 
 @router.post("/accept-regeneration", status_code=status.HTTP_200_OK)

@@ -249,7 +249,7 @@
                     <!-- AI Suggestions -->
                     <div class="rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-2xl backdrop-blur space-y-4">
                         <div class="flex items-center justify-between gap-2">
-                            <h2 class="text-lg font-semibold text-white">AI Suggestions</h2>
+                            <h2 class="text-lg font-semibold text-white">Today's AI Suggestions</h2>
                             <button
                                 id="suggestionsRefreshBtn"
                                 class="inline-flex items-center justify-center rounded-xl border border-white/15 bg-slate-900/70 px-3 py-1.5 text-xs font-semibold text-slate-100 shadow-sm hover:bg-slate-900"
@@ -257,10 +257,10 @@
                                 Refresh
                             </button>
                         </div>
-
                         <div id="suggestionsContainer" class="space-y-2">
                             <!-- Dynamically render suggestions here -->
                         </div>
+                        <span id="suggestionsStatus" class="text-xs text-slate-400"></span>
                     </div>
                 </div>
             </div>
@@ -284,6 +284,7 @@
     const statusPill = document.getElementById('statusPill');
     const newBasketCard = document.getElementById('newBasketCard');
     const suggestionsContainer = document.getElementById('suggestionsContainer');
+    const suggestionsStatus = document.getElementById('suggestionsStatus');
 
     function sumWeights() {
         let sum = 0;
@@ -368,23 +369,38 @@
     }
 
     function validateHoldings(holdings) {
-        const errors = [];
-        holdings.forEach((h, index) => {
+        if (!Array.isArray(holdings) || holdings.length === 0) {
+            return {
+                valid: 0,
+                errorMsg: "Your basket must include at least one holding before it can be saved."
+            };
+        }
+        let totalWeight = 0;
+        for (const h of holdings) {
             const ticker = (h.ticker || "").trim();
             const weight = Number(h.weight_pct);
 
-            if (!ticker) {
-                errors.push(`Row ${index + 1}: Ticker cannot be empty.`);
+            if (!ticker || isNaN(weight) || weight <= 0) {
+                return {
+                    valid: 0,
+                    errorMsg: "One or more holdings are invalid. Each holding must include a ticker and a weight greater than zero."
+                };
             }
-            if (isNaN(weight) || weight <= 0) {
-                errors.push(`Row ${index + 1}: Weight must be a number greater than 0.`);
-            }
-        });
+            totalWeight += weight;
+        }
+        if (Math.abs(totalWeight - 100) > 0.005) {
+            return {
+                valid: 0,
+                errorMsg: "The total weight of all holdings must sum to 100%."
+            };
+        }
         return {
-            valid: errors.length === 0,
-            errors
+            valid: 1,
+            errorMsg: ""
         };
     }
+
+
 
 
     function normalizeWeights() {
@@ -404,9 +420,9 @@
         const nameInputValue = nameInput.value.trim()
         const descInputValue = descInput.value.trim()
         const holdingsList = getHoldingsFromTable()
-        const { valid, errors } = validateHoldings(holdingsList);
+        const { valid, errorMsg } = validateHoldings(holdingsList);
         if (!valid) {
-            actionStatus.textContent = errors.join(" ");
+            actionStatus.textContent = errorMsg;
             return;
         }
         if (!nameInputValue) {
@@ -520,10 +536,15 @@
     // Right panel functions
 
     generateBtn = document.getElementById('generateBtn');
-    generateBtn.addEventListener('click', async () => fetchSuggestedBasket());
+    generateBtn.addEventListener('click', async () => fetchRegeneratedBasket());
 
-    async function fetchSuggestedBasket() {
+    async function fetchRegeneratedBasket() {
         const user_prompt = document.getElementById('userPrompt').value.trim();
+        const name = nameInput.value.trim()
+        const description = descInput.value.trim()
+        const holdings = getHoldingsFromTable()
+        const { valid, errorMsg } = validateHoldings(holdings);
+
         if (!user_prompt) {
             newBasketCard.innerHTML = '<p class="text-xs text-slate-400">Please enter a prompt.</p>';
             return;
@@ -531,6 +552,18 @@
         if (user_prompt.length < 10) {
             newBasketCard.innerHTML = '<p class="text-xs text-slate-400">Prompt must be at least 10 characters.</p>';
             return;
+        }
+        if (!valid) {
+            newBasketCard.innerHTML = `<p class="text-xs text-slate-400">${errorMsg}</p>`;
+            return;
+        }
+        if (!name) {
+            newBasketCard.innerHTML = '<p class="text-xs text-slate-400">Basket name cannot be empty.</p>';
+            return
+        }
+        if (description.length < 10) {
+            newBasketCard.innerHTML = '<p class="text-xs text-slate-400">Basket description must be at least 10 characters.</p>';
+            return
         }
 
         newBasketCard.innerHTML = '';
@@ -540,9 +573,9 @@
         try {
             const payload = {
                 id: basketId,
-                name: nameInput.value.trim(),
-                description: descInput.value.trim(),
-                holdings: getHoldingsFromTable(),
+                name: name,
+                description: description,
+                holdings: holdings,
                 user_prompt: user_prompt
             };
             const res = await fetch('/baskets/regenerate', {
@@ -684,6 +717,7 @@
         suggestionsContainer.innerHTML = '';
         suggestionsRefreshBtn.textContent = 'Fetching...';
         suggestionsRefreshBtn.disabled = true;
+        suggestionsStatus.textContent = "Fetching today's suggestions..."
         try {
             const res = await fetch('/baskets/get-suggestions', {
                 method: 'POST',
@@ -699,6 +733,7 @@
         } finally {
             suggestionsRefreshBtn.textContent = 'Refresh';
             suggestionsRefreshBtn.disabled = false;
+            suggestionsStatus.textContent = '';
         }
     }
 

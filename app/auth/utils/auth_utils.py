@@ -1,12 +1,9 @@
 import random
 import hashlib
-from email_validator import validate_email, EmailNotValidError
+from email_validator import validate_email
 from core.config import settings
-from db.utils.time import current_datetime_utc, add_to_datetime
+from db.utils.time import current_datetime_et, add_to_datetime
 from jose import jwt
-from typing import List, Optional
-from fastapi_mail import FastMail, MessageSchema, MessageType
-from core.config import mail_config
 
 def validate_user_email(email):
     emailinfo = validate_email(email, check_deliverability=False)
@@ -20,7 +17,7 @@ def generate_code_hash(code):
 
 def create_access_token(data: dict) -> str:
     to_encode = data.copy()
-    now = current_datetime_utc()
+    now = current_datetime_et()
     expire = add_to_datetime(dt=now, days=settings.ACCESS_TOKEN_EXPIRY_DAYS)
     to_encode.update({"exp": expire, "iat": now})
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
