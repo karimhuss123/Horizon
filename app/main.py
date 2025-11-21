@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from app.db.db import engine, Base
-from app.routers import baskets, pages, securities, auth
+from app.routers import baskets, pages, securities, auth, jobs
 from app.core.config import settings
 from app.core.errors.handlers import validation_exception_handler
 from fastapi.exceptions import RequestValidationError
@@ -12,6 +12,7 @@ def create_app() -> FastAPI:
     app.include_router(pages.router)
     app.include_router(securities.router)
     app.include_router(auth.router)
+    app.include_router(jobs.router)
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
     
     app.mount("/static", StaticFiles(directory="app/frontend/static"), name="static")

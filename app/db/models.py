@@ -161,3 +161,26 @@ class News(Base):
     created_at = Column(DateTime(timezone=True), default=current_datetime_et)
     
     security = relationship("Security", back_populates="news")
+
+class JobType(enum.Enum):
+    BASKET_GENERATION = "basket_generation"
+
+class JobStatus(enum.Enum):
+    PENDING = "pending"
+    RUNNING = "running"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+
+class Job(Base):
+    __tablename__ = "jobs"
+    
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    basket_id = Column(Integer, ForeignKey("baskets.id", ondelete="CASCADE"), nullable=True)
+    job_type = Column(Enum(JobType))
+    status = Column(Enum(JobStatus))
+    payload = Column(JSONB)
+    error_message = Column(String, nullable=True)
+    
+    created_at = Column(DateTime(timezone=True), default=current_datetime_et)
+    updated_at = Column(DateTime(timezone=True), onupdate=current_datetime_et)

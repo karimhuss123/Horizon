@@ -20,17 +20,18 @@ from app.investment_engine.schemas.basket_schemas import (
 from app.investment_engine.schemas.basket_suggestion_schemas import BasketSuggestionItem
 from app.clients.openai_client import OpenAIClient
 from app.auth.dependencies import require_login
+from app.tasks.services.job_service import JobService
+from app.tasks.schemas.job_schemas import JobResponse
 
 router = APIRouter(prefix="/baskets", tags=["baskets"])
 
 templates = Jinja2Templates(directory="app/frontend/templates")
 
-@router.post("/generate", response_model=BasketResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/generate", response_model=JobResponse, status_code=status.HTTP_201_CREATED)
 async def generate(payload: BasketGenerateRequest, db: Session = Depends(get_db), current_user = Depends(require_login)):
-    ai_svc = AIService(OpenAIClient())
-    basket_svc = BasketService(db, ai_svc)
-    basket = basket_svc.generate_basket(user_prompt=payload.user_prompt, user_id=current_user.id)
-    return basket
+    job_svc = JobService(db)
+    job = job_svc.enqueue_basket_generation(payload, current_user.id)
+    return job
 
 @router.post('/regenerate', response_model=BasketRegenerationResponse, status_code=status.HTTP_200_OK)
 async def regenerate(payload: BasketRegenerateRequest, db: Session = Depends(get_db), current_user = Depends(require_login)):
