@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from market_data.repositories.security_repo import SecurityRepo
+from app.market_data.repositories.security_repo import SecurityRepo
 
 class SecurityService:
     def __init__(self, db: Session):

@@ -3,10 +3,10 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 import enum
-from db.db import Base
 from pgvector.sqlalchemy import Vector
-from db.utils.time import current_datetime_et
 from sqlalchemy.dialects.postgresql import JSONB
+from app.db.utils.time import current_datetime_et
+from app.db.db import Base
 
 class RiskLevel(enum.Enum):
     LOW = "Low"

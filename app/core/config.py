@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     BASKET_GENERATION_DAILY_LIMIT: int = 20
     BASKET_REGENERATION_DAILY_LIMIT: int = 40
     
+    REDIS_URL: str
+    
     MAIL_USERNAME: EmailStr
     MAIL_PASSWORD: str
     MAIL_FROM: EmailStr
@@ -49,6 +51,10 @@ class Settings(BaseSettings):
             "rationale": self.RATIONALE_TEMP,
             "basket_suggestion": self.BASKET_SUGGESTION_TEMP
         }
+    
+    CELERY_TASK_FILES : list = [
+        "app.investment_engine.tasks.basket_tasks"
+    ]
     
     class Config:
         env_file = ".env"

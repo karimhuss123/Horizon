@@ -1,7 +1,7 @@
 from fastapi import Request, APIRouter, Depends
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
-from auth.dependencies import require_login
+from app.auth.dependencies import require_login
 
 router = APIRouter(prefix="", tags=["pages"])
 templates = Jinja2Templates(directory="app/frontend/templates")

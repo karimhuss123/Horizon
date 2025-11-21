@@ -1,13 +1,13 @@
-from clients.openai_client import OpenAIClient
-from investment_engine.prompts.system.intent_enrichment import INTENT_ENRICHMENT_PROMPT
-from investment_engine.prompts.system.intent_regeneration import INTENT_REGENERATION_PROMPT
-from investment_engine.prompts.system.gen_rationale import GEN_RATIONALE_SYSTEM_PROMPT
-from investment_engine.prompts.user.gen_rationale import GEN_RATIONALE_USER_PROMPT
-from investment_engine.prompts.system.suggestion_rationale import SUG_RATIONALE_SYSTEM_PROMPT
-from investment_engine.prompts.user.suggestion_rationale import SUG_RATIONALE_USER_PROMPT
-from investment_engine.prompts.system.basket_metadata_generate import BASKET_METADATA_SYSTEM_PROMPT
-from core.config import settings
 import json
+from app.clients.openai_client import OpenAIClient
+from app.investment_engine.prompts.system.intent_enrichment import INTENT_ENRICHMENT_PROMPT
+from app.investment_engine.prompts.system.intent_regeneration import INTENT_REGENERATION_PROMPT
+from app.investment_engine.prompts.system.gen_rationale import GEN_RATIONALE_SYSTEM_PROMPT
+from app.investment_engine.prompts.user.gen_rationale import GEN_RATIONALE_USER_PROMPT
+from app.investment_engine.prompts.system.suggestion_rationale import SUG_RATIONALE_SYSTEM_PROMPT
+from app.investment_engine.prompts.user.suggestion_rationale import SUG_RATIONALE_USER_PROMPT
+from app.investment_engine.prompts.system.basket_metadata_generate import BASKET_METADATA_SYSTEM_PROMPT
+from app.core.config import settings
 
 class AIService:
     def __init__(

@@ -2,8 +2,8 @@ import os, math
 import pandas as pd
 from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert
-from db.db import get_db
-from db.models import Security
+from app.db.db import get_db
+from app.db.models import Security
 from openai import OpenAI
 from dotenv import load_dotenv
 

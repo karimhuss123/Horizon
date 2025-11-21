@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from db.models import Security
 from sqlalchemy import select
+from app.db.models import Security
 
 class SecurityRepo:
     def __init__(self, db: Session):

@@ -1,5 +1,5 @@
-from core.config import settings
 import resend
+from app.core.config import settings
 
 class ResendClient:
     def __init__(self):

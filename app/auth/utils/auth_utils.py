@@ -1,9 +1,9 @@
 import random
 import hashlib
 from email_validator import validate_email
-from core.config import settings
-from db.utils.time import current_datetime_et, add_to_datetime
 from jose import jwt
+from app.core.config import settings
+from app.db.utils.time import current_datetime_et, add_to_datetime
 
 def validate_user_email(email):
     emailinfo = validate_email(email, check_deliverability=False)

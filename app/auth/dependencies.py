@@ -1,9 +1,9 @@
 from fastapi import Depends, HTTPException, status, Request
 from jose import jwt, JWTError
 from sqlalchemy.orm import Session
-from core.config import settings
-from db.db import get_db
-from auth.repositories.user_repo import UserRepo
+from app.auth.repositories.user_repo import UserRepo
+from app.core.config import settings
+from app.db.db import get_db
 
 def require_login(request: Request, db: Session = Depends(get_db)):
     try:

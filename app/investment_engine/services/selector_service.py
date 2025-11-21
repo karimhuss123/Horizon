@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
-from db.models import Security
 import numpy as np
 from decimal import Decimal, ROUND_HALF_UP
+from app.db.models import Security
 
 class SelectorService:
     def __init__(self, db: Session):

@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
-from auth.utils.auth_utils import validate_user_email
-from auth.repositories.user_repo import UserRepo
-from auth.services.logincode_service import LoginCodeService
-from clients.resend_client import ResendClient
+from app.auth.utils.auth_utils import validate_user_email
+from app.auth.repositories.user_repo import UserRepo
+from app.auth.services.logincode_service import LoginCodeService
+from app.clients.resend_client import ResendClient
 
 class AuthService:
     def __init__(self, db: Session):

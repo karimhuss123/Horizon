@@ -2,13 +2,13 @@ from fastapi import Request, APIRouter, Depends, HTTPException, status, Backgrou
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
-from auth.schemas.auth_schemas import LoginRequest, CodeVerifyRequest
-from auth.services.auth_service import AuthService
-from db.db import get_db
-from auth.utils.auth_utils import create_access_token
-from auth.dependencies import require_login, require_anonymous
-from core.config import settings
-from core.errors.messages import messages
+from app.auth.schemas.auth_schemas import LoginRequest, CodeVerifyRequest
+from app.auth.services.auth_service import AuthService
+from app.db.db import get_db
+from app.auth.utils.auth_utils import create_access_token
+from app.auth.dependencies import require_login, require_anonymous
+from app.core.config import settings
+from app.core.errors.messages import messages
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 templates = Jinja2Templates(directory="app/frontend/templates")

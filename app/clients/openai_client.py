@@ -1,5 +1,5 @@
 from openai import OpenAI
-from core.config import settings
+from app.core.config import settings
 
 class OpenAIClient:
     def __init__(self, model=None, embeddings_model=None):

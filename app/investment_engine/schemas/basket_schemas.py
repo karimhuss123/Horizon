@@ -1,8 +1,8 @@
 from pydantic import BaseModel, Field, ConfigDict, model_validator, StringConstraints
 from typing import List, Optional, Annotated
-from investment_engine.schemas.holding_schemas import HoldingIn, HoldingOut
-from db.models import BasketStatus
-from core.errors.messages import messages
+from app.investment_engine.schemas.holding_schemas import HoldingIn, HoldingOut
+from app.db.models import BasketStatus
+from app.core.errors.messages import messages
 
 PromptStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=10, max_length=1000)]
 NameStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]

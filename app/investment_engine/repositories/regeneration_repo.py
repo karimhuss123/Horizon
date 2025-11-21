@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session, selectinload
-from db.models import Basket, Regeneration
 from fastapi import HTTPException
-from db.utils.time import get_today_date, day_bounds_from_date
+from app.db.models import Basket, Regeneration
+from app.db.utils.time import get_today_date, day_bounds_from_date
 
 class RegenerationRepo:
     def __init__(self, db: Session):

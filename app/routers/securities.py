@@ -1,12 +1,12 @@
 from fastapi import Request, APIRouter, Depends, status
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from db.db import get_db
-from market_data.schemas.security_schemas import TickerItem
 from fastapi.responses import HTMLResponse
-from market_data.services.security_service import SecurityService
 from typing import List
-from auth.dependencies import require_login
+from app.db.db import get_db
+from app.market_data.schemas.security_schemas import TickerItem
+from app.market_data.services.security_service import SecurityService
+from app.auth.dependencies import require_login
 
 router = APIRouter(prefix="/securities", tags=["securities"])
 

@@ -1,7 +1,6 @@
 from sqlalchemy.orm import Session
-from db.models import Security, News
-from sqlalchemy import select
-from market_data.repositories.security_repo import SecurityRepo
+from app.db.models import News
+from app.market_data.repositories.security_repo import SecurityRepo
 
 class NewsRepo:
     def __init__(self, db: Session):

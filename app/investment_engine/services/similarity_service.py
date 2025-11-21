@@ -1,10 +1,10 @@
-from sqlalchemy.orm import Session
-from investment_engine.utils.similarity_backend import np_cosine_similarity_batch
-from market_data.repositories.security_repo import SecurityRepo
-from db.utils.time import current_datetime_et
 from datetime import timezone
+from sqlalchemy.orm import Session
 import math
-from core.config import settings
+from app.investment_engine.utils.similarity_backend import np_cosine_similarity_batch
+from app.market_data.repositories.security_repo import SecurityRepo
+from app.db.utils.time import current_datetime_et
+from app.core.config import settings
 
 class SimilarityService:
     def __init__(self, db: Session):

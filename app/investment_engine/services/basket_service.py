@@ -1,14 +1,14 @@
-from sqlalchemy.orm import Session
-from investment_engine.services.selector_service import SelectorService
-from investment_engine.services.theme_service import ThemeService
-from investment_engine.repositories.basket_repo import BasketRepo
-from investment_engine.repositories.regeneration_repo import RegenerationRepo
-from investment_engine.repositories.basket_suggestion_repo import BasketSuggestionRepo
-from investment_engine.utils.fingerprint import compute_basket_fingerprint
-from core.errors.messages import messages
-from core.config import settings
-from fastapi import HTTPException, status
 import json
+from sqlalchemy.orm import Session
+from fastapi import HTTPException, status
+from app.investment_engine.services.selector_service import SelectorService
+from app.investment_engine.services.theme_service import ThemeService
+from app.investment_engine.repositories.basket_repo import BasketRepo
+from app.investment_engine.repositories.regeneration_repo import RegenerationRepo
+from app.investment_engine.repositories.basket_suggestion_repo import BasketSuggestionRepo
+from app.investment_engine.utils.fingerprint import compute_basket_fingerprint
+from app.core.errors.messages import messages
+from app.core.config import settings
 
 class BasketService:
     def __init__(self, db: Session, ai=None):

@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
-from clients.openai_client import OpenAIClient
-from db.models import Security
 from sqlalchemy import select, text
-from investment_engine.utils.similarity_backend import sa_bind_vector, sa_cosine_similarity_expr
-from core.config import settings
+from app.clients.openai_client import OpenAIClient
+from app.db.models import Security
+from app.investment_engine.utils.similarity_backend import sa_bind_vector, sa_cosine_similarity_expr
+from app.core.config import settings
 
 class ThemeService:
     def __init__(self, db: Session, client: OpenAIClient):

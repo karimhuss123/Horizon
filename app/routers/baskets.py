@@ -1,11 +1,13 @@
 from fastapi import Request, APIRouter, Depends, status
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from db.db import get_db
-from investment_engine.services.basket_service import BasketService
-from investment_engine.services.ai_service import AIService
-from investment_engine.services.basket_suggestion_service import BasketSuggestionService
-from investment_engine.schemas.basket_schemas import (
+from fastapi.responses import HTMLResponse
+from typing import List
+from app.db.db import get_db
+from app.investment_engine.services.basket_service import BasketService
+from app.investment_engine.services.ai_service import AIService
+from app.investment_engine.services.basket_suggestion_service import BasketSuggestionService
+from app.investment_engine.schemas.basket_schemas import (
     BasketRegenerateRequest,
     BasketResponse, 
     BasketGenerateRequest, 
@@ -15,11 +17,9 @@ from investment_engine.schemas.basket_schemas import (
     BasketRegenerationResponse,
     AcceptRegenerationRequest
 )
-from investment_engine.schemas.basket_suggestion_schemas import BasketSuggestionItem
-from clients.openai_client import OpenAIClient
-from fastapi.responses import HTMLResponse
-from typing import List
-from auth.dependencies import require_login
+from app.investment_engine.schemas.basket_suggestion_schemas import BasketSuggestionItem
+from app.clients.openai_client import OpenAIClient
+from app.auth.dependencies import require_login
 
 router = APIRouter(prefix="/baskets", tags=["baskets"])
 

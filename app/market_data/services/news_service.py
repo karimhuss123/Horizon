@@ -1,8 +1,8 @@
-from market_data.repositories.news_repo import NewsRepo
-from clients.openai_client import OpenAIClient
 from sqlalchemy.orm import Session
 from datetime import datetime
 import yfinance as yf
+from app.market_data.repositories.news_repo import NewsRepo
+from app.clients.openai_client import OpenAIClient
 
 class NewsService:
     def __init__(self, db: Session, client: OpenAIClient):

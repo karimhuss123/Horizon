@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
-from auth.repositories.logincode_repo import LoginCodeRepo
-from auth.utils.auth_utils import generate_random_code, generate_code_hash
-from core.config import settings
 from fastapi import HTTPException, status
-from core.errors.messages import messages
+from app.auth.repositories.logincode_repo import LoginCodeRepo
+from app.auth.utils.auth_utils import generate_random_code, generate_code_hash
+from app.core.config import settings
+from app.core.errors.messages import messages
 
 class LoginCodeService:
     def __init__(self, db: Session):

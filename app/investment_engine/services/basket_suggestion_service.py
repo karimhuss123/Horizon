@@ -1,10 +1,10 @@
 from sqlalchemy.orm import Session
-from investment_engine.services.selector_service import SelectorService
-from investment_engine.services.theme_service import ThemeService
-from investment_engine.services.similarity_service import SimilarityService
-from investment_engine.repositories.basket_repo import BasketRepo
-from investment_engine.repositories.basket_suggestion_repo import BasketSuggestionRepo
-from market_data.services.news_service import NewsService
+from app.investment_engine.services.selector_service import SelectorService
+from app.investment_engine.services.theme_service import ThemeService
+from app.investment_engine.services.similarity_service import SimilarityService
+from app.investment_engine.repositories.basket_repo import BasketRepo
+from app.investment_engine.repositories.basket_suggestion_repo import BasketSuggestionRepo
+from app.market_data.services.news_service import NewsService
 
 class BasketSuggestionService:
     def __init__(self, db: Session, ai=None):
