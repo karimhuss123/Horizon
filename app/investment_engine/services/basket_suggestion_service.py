@@ -13,7 +13,7 @@ class BasketSuggestionService:
         self.baskets = BasketRepo(db)
         self.suggestions = BasketSuggestionRepo(db)
     
-    def get_basket_suggestions(self, basket_id, user_id):
+    def generate_basket_suggestions(self, basket_id, user_id):
         basket = self.baskets.get(basket_id, user_id)
         todays_suggestions_for_basket = self.suggestions.get_suggestions_for_basket_today(basket.id)
         if todays_suggestions_for_basket:
@@ -36,6 +36,13 @@ class BasketSuggestionService:
         top_k_suggestions_with_rationales = self.ai.generate_suggestion_rationales(basket, top_k_suggestions)
         self.suggestions.create_suggestions(basket.id, top_k_suggestions)
         return top_k_suggestions_with_rationales
+    
+    def get_basket_suggestions(self, basket_id, user_id):
+        basket = self.baskets.get(basket_id, user_id)
+        todays_suggestions_for_basket = self.suggestions.get_suggestions_for_basket_today(basket.id)
+        if not todays_suggestions_for_basket:
+            return []
+        return self._build_suggestions_list(todays_suggestions_for_basket)
 
     def _build_suggestions_list(self, suggestions):
         return [

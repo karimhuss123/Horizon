@@ -164,6 +164,7 @@ class News(Base):
 
 class JobType(enum.Enum):
     BASKET_GENERATION = "basket_generation"
+    SUGGESTIONS_GENERATION = "suggestions_generation"
 
 class JobStatus(enum.Enum):
     PENDING = "pending"

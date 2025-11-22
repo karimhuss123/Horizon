@@ -79,11 +79,16 @@ def save_edit(payload: BasketUpdateRequest, db: Session = Depends(get_db), curre
     basket = BasketResponse.model_validate(basket_obj)
     return basket
 
-@router.post("/get-suggestions", response_model=List[BasketSuggestionItem], status_code=status.HTTP_200_OK)
-def get_suggestions(payload: BasketIdRequest, db: Session = Depends(get_db), current_user = Depends(require_login)):
-    ai_svc = AIService(OpenAIClient())
-    sug_svc = BasketSuggestionService(db, ai_svc)
-    suggestions = sug_svc.get_basket_suggestions(basket_id=payload.basket_id, user_id=current_user.id)
+@router.post("/generate-suggestions", response_model=JobResponse, status_code=status.HTTP_200_OK)
+def generate_basket_suggestions(payload: BasketIdRequest, db: Session = Depends(get_db), current_user = Depends(require_login)):
+    job_svc = JobService(db)
+    job = job_svc.enqueue_suggestions_generation(payload, current_user.id)
+    return job
+
+@router.get("/get-suggestions", response_model=List[BasketSuggestionItem], status_code=status.HTTP_200_OK)
+def get_basket_suggestions(basket_id: str, db: Session = Depends(get_db), current_user = Depends(require_login)):
+    sug_svc = BasketSuggestionService(db)
+    suggestions = sug_svc.get_basket_suggestions(basket_id=basket_id, user_id=current_user.id)
     return suggestions
 
 @router.post("/accept-regeneration", status_code=status.HTTP_200_OK)

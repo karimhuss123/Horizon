@@ -11,7 +11,8 @@ class ErrorMessages:
         self.baskets_generation_daily_limit = "You’ve reached your daily limit for creating new baskets. Please try again tomorrow."
         self.baskets_regeneration_daily_limit = "You’ve reached your daily limit for regenerating baskets. Please try again tomorrow."
         self.jobs_basket_generation_unexpected_error = "An unexpected error occurred while generating your basket. Please try again."
-        self.jobs_basket_generation_already_in_progress = "You already have a basket generation in progress. Please wait until it is complete before submitting a new prompt."
+        self.jobs_basket_generation_in_progress = "You already have a basket generation in progress. Please wait until it is complete before submitting a new prompt."
+        self.jobs_suggestions_in_progress = "Suggestions generation is in progress. Please wait."
         self.job_not_found = "Job not found."
 
 messages = ErrorMessages()

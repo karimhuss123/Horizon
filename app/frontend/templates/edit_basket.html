@@ -248,15 +248,7 @@
 
                     <!-- AI Suggestions -->
                     <div class="rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-2xl backdrop-blur space-y-4">
-                        <div class="flex items-center justify-between gap-2">
-                            <h2 class="text-lg font-semibold text-white">Today's AI Suggestions</h2>
-                            <button
-                                id="suggestionsRefreshBtn"
-                                class="inline-flex items-center justify-center rounded-xl border border-white/15 bg-slate-900/70 px-3 py-1.5 text-xs font-semibold text-slate-100 shadow-sm hover:bg-slate-900"
-                            >
-                                Refresh
-                            </button>
-                        </div>
+                        <h2 class="text-lg font-semibold text-white">Today's AI Suggestions</h2>
                         <div id="suggestionsContainer" class="space-y-2">
                             <!-- Dynamically render suggestions here -->
                         </div>
@@ -399,9 +391,6 @@
             errorMsg: ""
         };
     }
-
-
-
 
     function normalizeWeights() {
         const rows = tbody.querySelectorAll('tr');
@@ -716,31 +705,89 @@
         });
     }
 
-    suggestionsRefreshBtn = document.getElementById('suggestionsRefreshBtn');
-    suggestionsRefreshBtn.addEventListener('click', async () => fetchAISuggestions());
 
-    async function fetchAISuggestions() {
-        suggestionsContainer.innerHTML = '';
-        suggestionsRefreshBtn.textContent = 'Fetching...';
-        suggestionsRefreshBtn.disabled = true;
-        suggestionsStatus.textContent = "Fetching today's suggestions..."
+    // SUGGESTIONS LOGIC (FETCHING, POLLING, ETC.)
+
+    async function fetchSuggestionsJobInProgress() {
+        const res = await fetch(`/jobs/get-suggestions-generating?basket_id=${basketId}`);
+        if (!res.ok) {
+            return null;
+        }
         try {
-            const res = await fetch('/baskets/get-suggestions', {
+            const data = await res.json();
+            return data || null;
+        } catch {
+            return null;
+        }
+    }
+
+    async function runSuggestionsGenJob() {
+        try {
+            const existingJobInProgress = await fetchSuggestionsJobInProgress();
+            if (existingJobInProgress && existingJobInProgress.job_id) {
+                return existingJobInProgress;
+            }
+        } catch (err) {
+            console.error('Failed to check existing job.');
+        }
+        
+        try {
+            const res = await fetch('/baskets/generate-suggestions', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ basket_id: basketId })
             });
-            if (!res.ok) throw new Error(`POST /baskets/get-suggestions -> ${res.status}`);
-            const data = await res.json();
-            renderSuggestions(data);
-        } catch (e) {
-            console.error(e);
-            suggestionsContainer.innerHTML = '<p class="text-xs text-slate-400">Failed to load suggestions.</p>';
-        } finally {
-            suggestionsRefreshBtn.textContent = 'Refresh';
-            suggestionsRefreshBtn.disabled = false;
-            suggestionsStatus.textContent = '';
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                const msg = data?.detail?.message || 'Suggestions generation failed. Please try again.';
+                setSuggestionsStatus(msg);
+                return null;
+            };
+            return data
+        } catch (err) {
+            console.error(err);
+            setSuggestionsStatus('Suggestions generation failed. Please try again.');
+            return null;
         }
+    
+    }
+
+    async function pollJob(jobId) {
+        try {
+            const res = await fetch(`/jobs/get?id=${jobId}`);
+            const data = await res.json();
+            if (!res.ok) {
+                const msg = data?.detail?.message || 'Job not found.';
+                throw new Error(msg);
+            }
+            if (data.status === 'pending' || data.status === 'running') {
+                setTimeout(() => pollJob(jobId), 2000);
+                return;
+            }
+            if (data.status === 'succeeded') {
+                fetchSuggestions(basketId);
+                succeededSuggestionsContainer();
+            } else if (data.status === 'failed') {
+                const msg = data.error_message || 'Suggestions generation failed. Please try again.';
+                setSuggestionsStatus(msg);
+            }
+            return;
+        } catch (err) {
+            console.error(err);
+            let text = 'Suggestions generation failed. Please try again.';
+            setSuggestionsStatus(text);
+        }
+    }
+
+    async function fetchSuggestions(basketId) {
+        const res = await fetch(`/baskets/get-suggestions?basket_id=${basketId}`);
+        if (!res.ok) throw new Error(`GET /baskets/get-suggestions -> ${res.status}`);
+        const data = await res.json();
+        if (!data || data.length === 0) {
+            return false;
+        }
+        renderSuggestions(data);
+        return true;
     }
 
     function renderSuggestions(suggestions) {
@@ -776,22 +823,44 @@
         }).join('');
         suggestionsContainer.innerHTML = rowsHtml;
     }
-
     function updateSuggestion(ticker) {
         console.log("Updating suggestion for:", ticker);
         // Update logic here
     }
-
     function removeSuggestion(ticker) {
         console.log("Remove action for:", ticker);
         // Handle other logic
     }
 
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const existingSuggestions = await fetchSuggestions(basketId);
+            if (existingSuggestions) return;
+            pendingSuggestionsContainer();
+            const job = await runSuggestionsGenJob();
+            if (job && job.job_id) {
+                pollJob(job.job_id);
+            } else {
+                setSuggestionsStatus('Suggestions generation failed. Please try again.');
+            }
+        } catch (err) {
+            console.error('Failed to initialize suggestions.');
+            setSuggestionsStatus('Suggestions generation failed. Please try again.');
+        }
+    });
+
+    function pendingSuggestionsContainer() {
+        suggestionsContainer.innerHTML = '';
+        suggestionsStatus.textContent = "Fetching today's suggestions...";
+    }
+    function succeededSuggestionsContainer() {
+        suggestionsStatus.textContent = "";
+    }
+    function setSuggestionsStatus(text) {
+        suggestionsStatus.textContent = text;
+    }
+
     updateTotals();
-
-    // Commented to avoid high number of calls when developing. Click "Refresh" to get suggestions
-    // fetchAISuggestions();
-
     document.querySelectorAll('.ticker-select').forEach(initSelect2On);
 </script>
 </body>
