@@ -259,6 +259,10 @@
         </div>
     </main>
 
+</body>
+</html>
+
+
 <script>
     const card = document.getElementById('basketCard');
     const basketId = card.dataset.basketId;
@@ -275,8 +279,6 @@
     const actionStatus = document.getElementById('actionStatus');
     const statusPill = document.getElementById('statusPill');
     const newBasketCard = document.getElementById('newBasketCard');
-    const suggestionsContainer = document.getElementById('suggestionsContainer');
-    const suggestionsStatus = document.getElementById('suggestionsStatus');
 
     function sumWeights() {
         let sum = 0;
@@ -704,91 +706,14 @@
             body: JSON.stringify({id})
         });
     }
+    updateTotals();
+    document.querySelectorAll('.ticker-select').forEach(initSelect2On);
+</script>
 
-
-    // SUGGESTIONS LOGIC (FETCHING, POLLING, ETC.)
-
-    async function fetchSuggestionsJobInProgress() {
-        const res = await fetch(`/jobs/get-suggestions-generating?basket_id=${basketId}`);
-        if (!res.ok) {
-            return null;
-        }
-        try {
-            const data = await res.json();
-            return data || null;
-        } catch {
-            return null;
-        }
-    }
-
-    async function runSuggestionsGenJob() {
-        try {
-            const existingJobInProgress = await fetchSuggestionsJobInProgress();
-            if (existingJobInProgress && existingJobInProgress.job_id) {
-                return existingJobInProgress;
-            }
-        } catch (err) {
-            console.error('Failed to check existing job.');
-        }
-        
-        try {
-            const res = await fetch('/baskets/generate-suggestions', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ basket_id: basketId })
-            });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                const msg = data?.detail?.message || 'Suggestions generation failed. Please try again.';
-                setSuggestionsStatus(msg);
-                return null;
-            };
-            return data
-        } catch (err) {
-            console.error(err);
-            setSuggestionsStatus('Suggestions generation failed. Please try again.');
-            return null;
-        }
-    
-    }
-
-    async function pollJob(jobId) {
-        try {
-            const res = await fetch(`/jobs/get?id=${jobId}`);
-            const data = await res.json();
-            if (!res.ok) {
-                const msg = data?.detail?.message || 'Job not found.';
-                throw new Error(msg);
-            }
-            if (data.status === 'pending' || data.status === 'running') {
-                setTimeout(() => pollJob(jobId), 2000);
-                return;
-            }
-            if (data.status === 'succeeded') {
-                fetchSuggestions(basketId);
-                succeededSuggestionsContainer();
-            } else if (data.status === 'failed') {
-                const msg = data.error_message || 'Suggestions generation failed. Please try again.';
-                setSuggestionsStatus(msg);
-            }
-            return;
-        } catch (err) {
-            console.error(err);
-            let text = 'Suggestions generation failed. Please try again.';
-            setSuggestionsStatus(text);
-        }
-    }
-
-    async function fetchSuggestions(basketId) {
-        const res = await fetch(`/baskets/get-suggestions?basket_id=${basketId}`);
-        if (!res.ok) throw new Error(`GET /baskets/get-suggestions -> ${res.status}`);
-        const data = await res.json();
-        if (!data || data.length === 0) {
-            return false;
-        }
-        renderSuggestions(data);
-        return true;
-    }
+<!-- SUGGESTIONS LOGIC (FETCHING, POLLING, ETC.) -->
+<script type="module">
+    const suggestionsContainer = document.getElementById('suggestionsContainer');
+    const suggestionsStatus = document.getElementById('suggestionsStatus');
 
     function renderSuggestions(suggestions) {
         const rowsHtml = suggestions.map(s => {
@@ -832,23 +757,6 @@
         // Handle other logic
     }
 
-    document.addEventListener('DOMContentLoaded', async () => {
-        try {
-            const existingSuggestions = await fetchSuggestions(basketId);
-            if (existingSuggestions) return;
-            pendingSuggestionsContainer();
-            const job = await runSuggestionsGenJob();
-            if (job && job.job_id) {
-                pollJob(job.job_id);
-            } else {
-                setSuggestionsStatus('Suggestions generation failed. Please try again.');
-            }
-        } catch (err) {
-            console.error('Failed to initialize suggestions.');
-            setSuggestionsStatus('Suggestions generation failed. Please try again.');
-        }
-    });
-
     function pendingSuggestionsContainer() {
         suggestionsContainer.innerHTML = '';
         suggestionsStatus.textContent = "Fetching today's suggestions...";
@@ -856,12 +764,20 @@
     function succeededSuggestionsContainer() {
         suggestionsStatus.textContent = "";
     }
-    function setSuggestionsStatus(text) {
-        suggestionsStatus.textContent = text;
-    }
-
-    updateTotals();
-    document.querySelectorAll('.ticker-select').forEach(initSelect2On);
+    import { initSuggestions } from "/static/js/suggestions.js";
+    document.addEventListener('DOMContentLoaded', async () => {
+        initSuggestions({
+            basketId: basketId,
+            fetchSuggestionsUrl: "/baskets/get-suggestions",
+            startJobUrl: "/baskets/generate-suggestions",
+            getJobInProgressUrl: "/jobs/get-suggestions-generating",
+            getJobUrl: "/jobs/get",
+            renderSuggestions: (suggestions) => renderSuggestions(suggestions),
+            setStatus: (msg) => {
+                suggestionsStatus.textContent = msg;
+            },
+            showPending: () => pendingSuggestionsContainer(),
+            showSucceeded: () => succeededSuggestionsContainer(),
+        });
+    });
 </script>
-</body>
-</html>
