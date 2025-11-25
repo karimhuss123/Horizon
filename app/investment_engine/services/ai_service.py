@@ -42,16 +42,16 @@ class AIService:
     
     def regenerate_intent_query(self, regen_data):
         holdings_text = "\n".join(
-			f"{h.ticker} — "
-			f"Weight: {h.weight_pct:.2f}% — Rationale: {h.rationale}"
-			for h in regen_data.holdings
+			f"{h["ticker"]} — "
+			f"Weight: {h["weight_pct"]:.2f}% — Rationale: {h["rationale"]}"
+			for h in regen_data["holdings"]
 		)
         basket_context = (
 			f"Existing basket:\n"
-			f"Name: {regen_data.name}\n"
-			f"Description: {regen_data.description}\n\n"
+			f"Name: {regen_data["name"]}\n"
+			f"Description: {regen_data["description"]}\n\n"
 			f"Holdings:\n{holdings_text}\n\n"
-			f"New user instructions:\n{regen_data.user_prompt.strip()}"
+			f"New user instructions:\n{regen_data["user_prompt"].strip()}"
 		)
         messages = [
             {"role": "system", "content": self.intent_regeneration_prompt},
@@ -59,7 +59,7 @@ class AIService:
         ]
         resp = self.client.chat(messages=messages, temperature=settings.TEMPERATURES["regeneration"], as_json=True)
         data = json.loads(resp)
-        data["user_prompt"] = regen_data.user_prompt
+        data["user_prompt"] = regen_data["user_prompt"]
         return data
     
     def generate_holding_rationales(self, criteria, holdings):

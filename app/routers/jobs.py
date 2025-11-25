@@ -21,6 +21,11 @@ async def get_basket_generating_job(request: Request, db: Session = Depends(get_
     job_svc = JobService(db)
     return job_svc.get_in_progress_basket_generation_job(current_user.id)
 
+@router.get("/get-regenerating", response_model=Optional[JobResponse], status_code=status.HTTP_200_OK)
+async def get_basket_regenerating_job(request: Request, basket_id: int, db: Session = Depends(get_db), current_user = Depends(require_login)):
+    job_svc = JobService(db)
+    return job_svc.get_in_progress_basket_regeneration_job(basket_id, current_user.id)
+
 @router.get("/get-suggestions-generating", response_model=Optional[JobResponse], status_code=status.HTTP_200_OK)
 async def get_suggestions_generating_job(request: Request, basket_id: int, db: Session = Depends(get_db), current_user = Depends(require_login)):
     job_svc = JobService(db)

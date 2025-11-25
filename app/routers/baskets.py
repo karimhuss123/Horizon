@@ -15,7 +15,8 @@ from app.investment_engine.schemas.basket_schemas import (
     BasketIdRequest,
     BasketUpdateRequest,
     BasketRegenerationResponse,
-    AcceptRegenerationRequest
+    AcceptRegenerationRequest,
+    RejectRegenerationRequest
 )
 from app.investment_engine.schemas.basket_suggestion_schemas import BasketSuggestionItem
 from app.clients.openai_client import OpenAIClient
@@ -33,12 +34,16 @@ async def generate(payload: BasketGenerateRequest, db: Session = Depends(get_db)
     job = job_svc.enqueue_basket_generation(payload, current_user.id)
     return job
 
-@router.post('/regenerate', response_model=BasketRegenerationResponse, status_code=status.HTTP_200_OK)
+# TO UPDATE: Make it start a job, like basket generation, and return a job
+@router.post('/regenerate', response_model=JobResponse, status_code=status.HTTP_200_OK)
 async def regenerate(payload: BasketRegenerateRequest, db: Session = Depends(get_db), current_user = Depends(require_login)):
-    ai_svc = AIService(OpenAIClient())
-    basket_svc = BasketService(db, ai_svc)
-    basket_data = basket_svc.regenerate_basket(payload, current_user.id)
-    return basket_data
+    # ai_svc = AIService(OpenAIClient())
+    # basket_svc = BasketService(db, ai_svc)
+    # basket_data = basket_svc.regenerate_basket(payload, current_user.id)
+    print("REGENERATION JOB STARTING")
+    job_svc = JobService(db)
+    job = job_svc.enqueue_basket_regeneration(payload, current_user.id)
+    return job
 
 @router.get("/get-all", response_model=BasketListResponse, status_code=status.HTTP_200_OK)
 async def get_all(db: Session = Depends(get_db), current_user = Depends(require_login)):
@@ -91,8 +96,19 @@ def get_basket_suggestions(basket_id: str, db: Session = Depends(get_db), curren
     suggestions = sug_svc.get_basket_suggestions(basket_id=basket_id, user_id=current_user.id)
     return suggestions
 
+@router.get("/get-regeneration", response_model=BasketRegenerationResponse, status_code=status.HTTP_200_OK)
+def get_regeneration(basket_id: str, db: Session = Depends(get_db), current_user = Depends(require_login)):
+    basket_svc = BasketService(db)
+    return basket_svc.get_regeneration_for_basket(basket_id=basket_id, user_id=current_user.id)
+
 @router.post("/accept-regeneration", status_code=status.HTTP_200_OK)
 def accept_regeneration(payload: AcceptRegenerationRequest, db: Session = Depends(get_db), current_user = Depends(require_login)):
     basket_svc = BasketService(db)
     basket_svc.accept_regeneration(payload.id, current_user.id)
+    return
+
+@router.post("/reject-regeneration", status_code=status.HTTP_200_OK)
+def reject_regeneration(payload: RejectRegenerationRequest, db: Session = Depends(get_db), current_user = Depends(require_login)):
+    basket_svc = BasketService(db)
+    basket_svc.reject_regeneration(payload.id, current_user.id)
     return

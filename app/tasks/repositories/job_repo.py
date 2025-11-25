@@ -29,6 +29,18 @@ class JobRepo:
         self.db.add(job)
         self.db.commit()
         return job
+    
+    def create_regeneration_job(self, payload, basket_id, user_id):
+        job = Job(
+            user_id=user_id,
+            basket_id=basket_id,
+            job_type=JobType.BASKET_REGENERATION,
+            status=JobStatus.PENDING,
+            payload=payload
+        )
+        self.db.add(job)
+        self.db.commit()
+        return job 
 
     def get_job_by_id(self, job_id, user_id):
         job = self.db.query(Job).filter(Job.id==job_id, Job.user_id==user_id).first()
@@ -42,6 +54,17 @@ class JobRepo:
             .filter(
                 Job.user_id == user_id,
                 Job.job_type == JobType.BASKET_GENERATION,
+                Job.status.in_([JobStatus.PENDING, JobStatus.RUNNING])
+            ).first()
+        )
+    
+    def get_in_progress_basket_regeneration_job(self, basket_id, user_id):
+        return (
+            self.db.query(Job)
+            .filter(
+                Job.user_id == user_id,
+                Job.basket_id == basket_id,
+                Job.job_type == JobType.BASKET_REGENERATION,
                 Job.status.in_([JobStatus.PENDING, JobStatus.RUNNING])
             ).first()
         )

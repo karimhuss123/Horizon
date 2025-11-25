@@ -223,10 +223,10 @@
         statusEl.textContent = '';
         try {
             const existingJob = await fetchGeneratingJob();
-            if (existingJob && existingJob.job_id && (existingJob.status === 'pending' || existingJob.status === 'running')) {
+            if (existingJob && existingJob.job_id) {
                 currentJobId = existingJob.job_id;
                 deactivateGenerateBtn();
-                pollJob(currentJobId);
+                pollGeneratingJob(currentJobId);
                 return;
             }
         } catch (err) {
@@ -250,7 +250,7 @@
                 return
             };
             currentJobId = data.job_id;
-            pollJob(currentJobId);
+            pollGeneratingJob(currentJobId);
         } catch (err) {
             console.error(err);
             statusEl.textContent = 'Failed to generate. Please try again.';
@@ -274,7 +274,7 @@
         }
     }
 
-    async function pollJob(jobId) {
+    async function pollGeneratingJob(jobId) {
         try {
             const res = await fetch(`/jobs/get?id=${jobId}`);
             if (!res.ok) {
@@ -286,7 +286,7 @@
             }
             const data = await res.json();
             if (data.status === 'pending' || data.status === 'running') {
-                jobPollTimeout = setTimeout(() => pollJob(jobId), 2000);
+                jobPollTimeout = setTimeout(() => pollGeneratingJob(jobId), 2000);
                 return;
             }
             currentJobId = null;
@@ -311,10 +311,10 @@
     document.addEventListener('DOMContentLoaded', async () => {
         try {
             const job = await fetchGeneratingJob();
-            if (job && job.job_id && (job.status === 'pending' || job.status === 'running')) {
+            if (job && job.job_id) {
                 currentJobId = job.job_id;
                 deactivateGenerateBtn();
-                pollJob(currentJobId);
+                pollGeneratingJob(currentJobId);
             }
         } catch (err) {
             console.error('Failed to initialize generation state.');

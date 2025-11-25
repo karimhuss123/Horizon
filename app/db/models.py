@@ -88,7 +88,7 @@ class Regeneration(Base):
     regenerated_description = Column(String, nullable=False)
     regenerated_holdings_list = Column(ARRAY(JSONB), nullable=False)
     
-    is_accepted = Column(Boolean, default=False, nullable=False)
+    is_accepted = Column(Boolean, nullable=True)
     created_at = Column(DateTime(timezone=True), default=current_datetime_et)
     
     basket = relationship("Basket", back_populates="regenerations")
@@ -164,6 +164,7 @@ class News(Base):
 
 class JobType(enum.Enum):
     BASKET_GENERATION = "basket_generation"
+    BASKET_REGENERATION = "basket_regeneration"
     SUGGESTIONS_GENERATION = "suggestions_generation"
 
 class JobStatus(enum.Enum):

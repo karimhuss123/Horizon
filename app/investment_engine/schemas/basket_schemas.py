@@ -13,7 +13,7 @@ class BasketGenerateRequest(BaseModel):
     user_prompt: PromptStr
 
 class BasketRegenerateRequest(BaseModel):
-    id: int = Field(..., gt=0)
+    basket_id: int = Field(..., gt=0)
     name: NameStr
     description: DescriptionStr
     holdings: List[HoldingIn] = Field(..., min_items=1, max_items=25)
@@ -30,6 +30,9 @@ class BasketIdRequest(BaseModel):
     basket_id: int = Field(..., gt=0)
 
 class AcceptRegenerationRequest(BaseModel):
+    id: int = Field(..., gt=0)
+
+class RejectRegenerationRequest(BaseModel):
     id: int = Field(..., gt=0)
 
 class BasketUpdateRequest(BaseModel):

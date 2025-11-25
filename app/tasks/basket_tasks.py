@@ -32,6 +32,27 @@ def run_basket_generation(job_id, user_id):
     except:
         jobs.update_failed_job(job_id, user_id, messages.jobs_basket_generation_unexpected_error)
 
+@celery_app.task(name="basket_regeneration_task")
+def run_basket_regeneration(job_id, user_id):
+    try:
+        db = SessionLocal()
+        jobs = JobRepo(db)
+        job = jobs.get_job_by_id(job_id, user_id)
+        print("HERE")
+        payload = json.loads(job.payload)
+        print("PAYLOAD:", payload)
+        ai_svc = AIService(OpenAIClient())
+        basket_svc = BasketService(db, ai_svc)
+        try:
+            regeneration = basket_svc.regenerate_basket(payload, user_id)
+        except HTTPException as e:
+            detail = e.detail.get("message") if isinstance(e.detail, dict) else str(e.detail)
+            jobs.update_failed_job(job_id, user_id, detail)
+            return
+        jobs.update_succeeded_job(job_id, user_id)
+    except:
+        jobs.update_failed_job(job_id, user_id, messages.jobs_basket_regeneration_unexpected_error)
+
 @celery_app.task(name="suggestions_generation_task")
 def run_suggestions_generation(job_id, user_id):
     try:
@@ -53,4 +74,4 @@ def run_suggestions_generation(job_id, user_id):
             return
         jobs.update_succeeded_job(job_id, user_id)
     except:
-        jobs.update_failed_job(job_id, user_id, messages.jobs_basket_generation_unexpected_error)
+        jobs.update_failed_job(job_id, user_id, messages.jobs_basket_suggestions_unexpected_error)

@@ -234,14 +234,14 @@
                         <div class="flex items-center gap-3">
                             <button
                                 id="generateBtn"
-                                class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-teal-400 to-cyan-400 px-4 py-2 text-xs font-semibold text-slate-950 shadow-lg shadow-teal-500/30 transition hover:opacity-95"
+                                class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-teal-400 to-cyan-400 px-4 py-2 text-xs font-semibold text-slate-950 shadow-lg shadow-teal-500/30 transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 Generate
                             </button>
-                            <span id="status" class="text-xs text-slate-400"></span>
+                            <span id="regenerationStatus" class="text-xs text-slate-400"></span>
                         </div>
 
-                        <div id="newBasketCard">
+                        <div id="newBasketCard" class="hidden">
                             <!-- Card inserted dynamically -->
                         </div>
                     </div>
@@ -394,18 +394,27 @@
         };
     }
 
+
     function normalizeWeights() {
-        const rows = tbody.querySelectorAll('tr');
+        const rows = [...tbody.querySelectorAll("tr")];
         if (rows.length === 0) return;
         const total = sumWeights();
         if (total <= 0) return;
-        rows.forEach(tr => {
-            const w = parseFloat(tr.querySelector('.weight').value) || 0;
-            const newW = (w / total) * 100.0;
-            tr.querySelector('.weight').value = newW.toFixed(2);
+        let raw = rows.map(tr => {
+            const val = parseFloat(tr.querySelector(".weight").value) || 0;
+            return (val / total) * 100;
+        });
+        let rounded = raw.map(w => parseFloat(w.toFixed(2)));
+        let sumRounded = rounded.reduce((a, b) => a + b, 0);
+        let diff = parseFloat((100 - sumRounded).toFixed(2));
+        const iMax = rounded.indexOf(Math.max(...rounded));
+        rounded[iMax] = parseFloat((rounded[iMax] + diff).toFixed(2));
+        rows.forEach((tr, i) => {
+            tr.querySelector(".weight").value = rounded[i].toFixed(2);
         });
         updateTotals();
     }
+
 
     async function save(status) {
         saveActiveBtn.disabled = true;
@@ -530,182 +539,6 @@
         }
     }
 
-    // Right panel functions
-
-    generateBtn = document.getElementById('generateBtn');
-    generateBtn.addEventListener('click', async () => fetchRegeneratedBasket());
-
-    async function fetchRegeneratedBasket() {
-        const user_prompt = document.getElementById('userPrompt').value.trim();
-        const name = nameInput.value.trim()
-        const description = descInput.value.trim()
-        const holdings = getHoldingsFromTable()
-        const { valid, errorMsg } = validateHoldings(holdings);
-
-        if (!user_prompt) {
-            newBasketCard.innerHTML = '<p class="text-xs text-slate-400">Please enter a prompt.</p>';
-            return;
-        }
-        if (user_prompt.length < 10) {
-            newBasketCard.innerHTML = '<p class="text-xs text-slate-400">Prompt must be at least 10 characters.</p>';
-            return;
-        }
-        if (!valid) {
-            newBasketCard.innerHTML = `<p class="text-xs text-slate-400">${errorMsg}</p>`;
-            return;
-        }
-        if (!name) {
-            newBasketCard.innerHTML = '<p class="text-xs text-slate-400">Basket name cannot be empty.</p>';
-            return
-        }
-        if (description.length < 10) {
-            newBasketCard.innerHTML = '<p class="text-xs text-slate-400">Basket description must be at least 10 characters.</p>';
-            return
-        }
-
-        newBasketCard.innerHTML = '';
-        newBasketCard.className = '';
-        generateBtn.textContent = 'Generating...';
-        generateBtn.disabled = true;
-        try {
-            const payload = {
-                id: basketId,
-                name: name,
-                description: description,
-                holdings: holdings,
-                user_prompt: user_prompt
-            };
-            const res = await fetch('/baskets/regenerate', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
-            if (!res.ok) {
-                if (data.detail && data.detail.message) {
-                    newBasketCard.innerHTML = `<p class="text-xs text-slate-400">${data.detail.message}</p>`;
-                } else {
-                    newBasketCard.innerHTML = `<p class="text-xs text-slate-400">Failed to regenerate.</p>`;
-                }
-                return
-            };
-            renderSuggestedBasket(data);
-        } catch (e) {
-            console.error(e);
-            newBasketCard.innerHTML = '<p class="text-xs text-slate-400">Failed to regenerate.</p>';
-        } finally {
-            generateBtn.textContent = 'Generate';
-            generateBtn.disabled = false;
-        }
-    }
-
-    function renderSuggestedBasket(suggested_basket) {
-        const card = document.getElementById('newBasketCard');
-        const userPrompt = document.getElementById('userPrompt');
-        if (!card) return;
-
-        card.className = '';
-        card.classList.add(
-            'mt-4',
-            'rounded-3xl',
-            'border',
-            'border-white/10',
-            'bg-slate-900/70',
-            'p-6',
-            'shadow-2xl',
-            'backdrop-blur'
-        );
-
-        const hasDesc = Boolean(suggested_basket.description && suggested_basket.description.trim());
-        const holdings = Array.isArray(suggested_basket.holdings) ? suggested_basket.holdings : [];
-
-        const rowsHtml = holdings.map(h => `
-            <tr class="hover:bg-slate-900/70">
-                <td class="px-4 py-2 text-sm font-medium text-slate-100">${h.ticker ?? '—'}</td>
-                <td class="px-4 py-2 text-sm text-slate-200">${h.name ?? '—'}</td>
-                <td class="px-4 py-2 text-right text-sm tabular-nums text-slate-200">${Number(h.weight_pct || 0).toFixed(2)}%</td>
-                <td class="px-4 py-2 text-sm text-slate-300">${h.rationale ?? ''}</td>
-            </tr>
-        `).join('');
-
-        card.innerHTML = `
-            <div class="flex items-start justify-between gap-4">
-                <div>
-                    <h2 class="text-xl font-semibold text-white">
-                        ${suggested_basket.name || 'Untitled Basket'}
-                    </h2>
-                    ${hasDesc ? `<p class="mt-1 text-sm text-slate-300">${suggested_basket.description}</p>` : ''}
-                </div>
-            </div>
-
-            <div class="mt-6 overflow-x-auto rounded-2xl border border-white/10 bg-slate-950/60">
-                <table class="min-w-full text-sm">
-                    <thead class="bg-slate-900/80">
-                        <tr>
-                            <th class="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400">Ticker</th>
-                            <th class="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400">Name</th>
-                            <th class="px-4 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-400">Weight</th>
-                            <th class="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400">Rationale</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-800/80">
-                        ${rowsHtml}
-                    </tbody>
-                </table>
-            </div>
-
-            <p class="mt-3 text-xs text-slate-400">
-                Holdings:
-                <span class="font-semibold text-slate-200">${holdings.length}</span>
-            </p>
-
-            <input type="hidden" id="regenerationId" value="${suggested_basket.id || ''}" />
-
-            <div class="mt-4 flex flex-wrap items-center gap-3">
-                <button
-                    id="suggestAcceptBtn"
-                    class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-teal-400 to-cyan-400 px-4 py-2 text-xs font-semibold text-slate-950 shadow-lg shadow-teal-500/30 transition hover:opacity-95"
-                >
-                    Accept
-                </button>
-                <button
-                    id="suggestRejectBtn"
-                    class="inline-flex items-center justify-center rounded-xl border border-red-500/40 bg-red-600/20 px-4 py-2 text-xs font-semibold text-red-200 shadow-sm hover:bg-red-600/30"
-                >
-                    Reject
-                </button>
-                <span id="suggestActionStatus" class="text-xs text-slate-400"></span>
-            </div>
-        `;
-
-        const actionStatus = document.getElementById('suggestActionStatus');
-        document.getElementById('suggestAcceptBtn').onclick = async () => {
-            actionStatus.textContent = 'Accepting…';
-            acceptRegeneration(suggested_basket.id)
-            nameInput.value = suggested_basket.name || '';
-            descInput.value = suggested_basket.description || '';
-            tbody.innerHTML = '';
-            suggested_basket.holdings.forEach(h => addRow(h));
-            card.className = '';
-            card.innerHTML = '<p class="text-xs text-slate-400">Suggested basket accepted into editor.</p>';
-            userPrompt.value = '';
-            updateTotals();
-        };
-        document.getElementById('suggestRejectBtn').onclick = async () => {
-            actionStatus.textContent = 'Rejecting...';
-            card.className = '';
-            card.innerHTML = '<p class="text-xs text-slate-400">Suggested basket rejected.</p>';
-            userPrompt.value = '';
-        };
-    }
-
-    async function acceptRegeneration(id) {
-        const res = await fetch('/baskets/accept-regeneration', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({id})
-        });
-    }
     updateTotals();
     document.querySelectorAll('.ticker-select').forEach(initSelect2On);
 </script>
@@ -779,5 +612,291 @@
             showPending: () => pendingSuggestionsContainer(),
             showSucceeded: () => succeededSuggestionsContainer(),
         });
+    });
+</script>
+
+
+
+<script>
+    generateBtn = document.getElementById('generateBtn');
+    regenerationStatus = document.getElementById('regenerationStatus')
+    generateBtn.addEventListener('click', async () => {
+        const user_prompt = document.getElementById('userPrompt').value.trim();
+        const name = nameInput.value.trim()
+        const description = descInput.value.trim()
+        const holdings = getHoldingsFromTable()
+        const { valid, errorMsg } = validateHoldings(holdings);
+
+        if (!user_prompt) {
+            setRegenerationStatusMsg('Please enter a prompt.');
+            return;
+        }
+        if (user_prompt.length < 10) {
+            setRegenerationStatusMsg('Prompt must be at least 10 characters.')
+            return;
+        }
+        if (!valid) {
+            setRegenerationStatusMsg(errorMsg);
+            return;
+        }
+        if (!name) {
+            setRegenerationStatusMsg('Basket name cannot be empty.');
+            return
+        }
+        if (description.length < 10) {
+            setRegenerationStatusMsg("Basket description must be at least 10 characters.");
+            return
+        }
+        try {
+            const existingJobRegen = await fetchRegeneratingJob();
+            if (existingJobRegen && existingJobRegen.job_id) {
+                deactivateRegenerateBtn();
+                pollRegeneratingJob(existingJobRegen.job_id);
+                return;
+            }
+        } catch (err) {
+            console.error('Failed to check existing job.');
+        }
+        try {
+            const hasRegeneration = await fetchRegenerationForBasket(basketId);
+            if (hasRegeneration) {
+                await rejectRegeneration(hasRegeneration.id);
+                clearRegeneration();
+            }
+        } catch {
+            console.error('Failed to reject existing regeneration.');
+        }
+        deactivateRegenerateBtn();
+        try {
+            const payload = {
+                basket_id: basketId,
+                name: name,
+                description: description,
+                holdings: holdings,
+                user_prompt: user_prompt
+            };
+            const res = await fetch('/baskets/regenerate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                if (data.detail && data.detail.message) {
+                    setRegenerationStatusMsg(data.detail.message);
+                } else {
+                    setRegenerationStatusMsg('Failed to regenerate.');
+                }
+                activateRegenerateBtn();
+                return
+            };
+            pollRegeneratingJob(data.job_id);
+        } catch (e) {
+            console.error(e);
+            setRegenerationStatusMsg("Failed to regenerate.");
+            activateRegenerateBtn();
+        }
+    });
+
+    function renderSuggestedBasket(suggested_basket) {
+        const card = document.getElementById('newBasketCard');
+        const userPrompt = document.getElementById('userPrompt');
+        if (!card) return;
+
+        card.className = '';
+        card.classList.add('mt-4', 'rounded-3xl', 'border', 'border-white/10', 'bg-slate-900/70', 'p-6', 'shadow-2xl', 'backdrop-blur');
+
+        const hasDesc = Boolean(suggested_basket.description && suggested_basket.description.trim());
+        const holdings = Array.isArray(suggested_basket.holdings) ? suggested_basket.holdings : [];
+
+        const rowsHtml = holdings.map(h => `
+            <tr class="hover:bg-slate-900/70">
+                <td class="px-4 py-2 text-sm font-medium text-slate-100">${h.ticker ?? '—'}</td>
+                <td class="px-4 py-2 text-sm text-slate-200">${h.name ?? '—'}</td>
+                <td class="px-4 py-2 text-right text-sm tabular-nums text-slate-200">${Number(h.weight_pct || 0).toFixed(2)}%</td>
+                <td class="px-4 py-2 text-sm text-slate-300">${h.rationale ?? ''}</td>
+            </tr>
+        `).join('');
+
+        card.innerHTML = `
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-semibold text-white">
+                        ${suggested_basket.name || 'Untitled Basket'}
+                    </h2>
+                    ${hasDesc ? `<p class="mt-1 text-sm text-slate-300">${suggested_basket.description}</p>` : ''}
+                </div>
+            </div>
+
+            <div class="mt-6 overflow-x-auto rounded-2xl border border-white/10 bg-slate-950/60">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-slate-900/80">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400">Ticker</th>
+                            <th class="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400">Name</th>
+                            <th class="px-4 py-2 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-400">Weight</th>
+                            <th class="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400">Rationale</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800/80">
+                        ${rowsHtml}
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="mt-3 text-xs text-slate-400">
+                Holdings:
+                <span class="font-semibold text-slate-200">${holdings.length}</span>
+            </p>
+
+            <input type="hidden" id="regenerationId" value="${suggested_basket.id || ''}" />
+
+            <div class="mt-4 flex flex-wrap items-center gap-3">
+                <button
+                    id="suggestAcceptBtn"
+                    class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-teal-400 to-cyan-400 px-4 py-2 text-xs font-semibold text-slate-950 shadow-lg shadow-teal-500/30 transition hover:opacity-95"
+                >
+                    Accept
+                </button>
+                <button
+                    id="suggestRejectBtn"
+                    class="inline-flex items-center justify-center rounded-xl border border-red-500/40 bg-red-600/20 px-4 py-2 text-xs font-semibold text-red-200 shadow-sm hover:bg-red-600/30"
+                >
+                    Reject
+                </button>
+                <span id="suggestActionStatus" class="text-xs text-slate-400"></span>
+            </div>
+        `;
+
+        const actionStatus = document.getElementById('suggestActionStatus');
+        document.getElementById('suggestAcceptBtn').onclick = async () => {
+            actionStatus.textContent = 'Accepting…';
+            acceptRegeneration(suggested_basket.id);
+            clearRegeneration();
+            nameInput.value = suggested_basket.name || '';
+            descInput.value = suggested_basket.description || '';
+            tbody.innerHTML = '';
+            suggested_basket.holdings.forEach(h => addRow(h));
+            setRegenerationStatusMsg('Suggested basket accepted.')
+            userPrompt.value = '';
+            updateTotals();
+        };
+        document.getElementById('suggestRejectBtn').onclick = async () => {
+            actionStatus.textContent = 'Rejecting...';
+            rejectRegeneration(suggested_basket.id)
+            clearRegeneration();
+            setRegenerationStatusMsg('Suggested basket rejected.')
+            userPrompt.value = '';
+        };
+    }
+
+    async function acceptRegeneration(id) {
+        const res = await fetch('/baskets/accept-regeneration', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({id})
+        });
+    }
+
+    async function rejectRegeneration(id) {
+        const res = await fetch('/baskets/reject-regeneration', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({id})
+        });
+    }
+
+    async function fetchRegenerationForBasket(basketId) {
+        const res = await fetch(`/baskets/get-regeneration?basket_id=${basketId}`);
+        if (!res.ok) return false;
+        const data = await res.json();
+        if (!data) {
+            return false;
+        }
+        return data;
+    }
+
+    async function fetchRegeneratingJob() {
+        const res = await fetch(`/jobs/get-regenerating?basket_id=${basketId}`);
+        if (!res.ok) {
+            return null;
+        }
+        try {
+            const data = await res.json();
+            return data || null;
+        } catch {
+            return null;
+        }
+    }
+
+    async function pollRegeneratingJob(jobId) {
+        try {
+            const res = await fetch(`/jobs/get?id=${jobId}`);
+            if (!res.ok) {
+                if (data.detail && data.detail.message) {
+                    throw new Error(data.detail.message);
+                } else {
+                    throw new Error("Job not found.");
+                }
+            }
+            const data = await res.json();
+            if (data.status === 'pending' || data.status === 'running') {
+                jobPollTimeout = setTimeout(() => pollRegeneratingJob(jobId), 2000);
+                return;
+            }
+            if (data.status === 'succeeded') {
+                const regeneration = await fetchRegenerationForBasket(basketId);
+                renderSuggestedBasket(regeneration);
+            } else if (data.status === 'failed') {
+                const msg = data.error_message || 'Basket regeneration failed. Please try again.';
+                setRegenerationStatusMsg(msg);
+            }
+            activateRegenerateBtn();
+        } catch (err) {
+            console.error(err);
+            activateRegenerateBtn();
+            setRegenerationStatusMsg('Basket generation failed. Please try again.');
+        }
+    }
+
+    function activateRegenerateBtn() {
+        generateBtn.textContent = 'Generate';
+        generateBtn.disabled = false;
+    }
+
+    function deactivateRegenerateBtn() {
+        newBasketCard.innerHTML = '';
+        newBasketCard.className = '';
+        newBasketCard.classList.add('hidden')
+        generateBtn.textContent = 'Generating...';
+        generateBtn.disabled = true;
+        setRegenerationStatusMsg('');
+    }
+
+    function setRegenerationStatusMsg(msg) {
+        regenerationStatus.textContent = msg;
+    }
+
+    function clearRegeneration() {
+        newBasketCard.innerHTML = '';
+        newBasketCard.className = '';
+        newBasketCard.classList.add('hidden');
+    }
+
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const regeneration = await fetchRegenerationForBasket(basketId)
+            if (regeneration) {
+                renderSuggestedBasket(regeneration);
+            };
+            const job = await fetchRegeneratingJob();
+            if (job && job.job_id) {
+                deactivateRegenerateBtn();
+                pollRegeneratingJob(job.job_id);
+            }
+        } catch (err) {
+            console.error('Failed to initialize regeneration state.');
+        }
     });
 </script>

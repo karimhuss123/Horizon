@@ -52,7 +52,7 @@ class BasketService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"message": messages.baskets_regeneration_daily_limit})
         selector_svc = SelectorService(self.db)
         theme_svc = ThemeService(self.db, self.ai.client)
-        basket = self.baskets.get(id=regen_data.id, user_id=user_id) # validate basket existence
+        basket = self.baskets.get(id=regen_data["basket_id"], user_id=user_id) # validate basket existence
         criteria = self.ai.regenerate_intent_query(regen_data)
         if criteria.get("error") == "invalid_user_prompt":
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"message": messages.meaningless_user_prompt})
@@ -63,10 +63,10 @@ class BasketService:
         weighted_holdings_with_rationale = self.ai.generate_holding_rationales(criteria, weighted_holdings)
         data = {
             "basket_id": basket.id,
-            "regeneration_user_prompt": regen_data.user_prompt,
-            "initial_basket_name": regen_data.name,
-            "initial_basket_description": regen_data.description,
-            "initial_basket_holdings": [json.loads(h.json()) for h in regen_data.holdings],
+            "regeneration_user_prompt": regen_data["user_prompt"],
+            "initial_basket_name": regen_data["name"],
+            "initial_basket_description": regen_data["description"],
+            "initial_basket_holdings": [h for h in regen_data["holdings"]],
             "name": criteria["name"],
             "description": criteria["theme_summary"],
             "holdings": weighted_holdings_with_rationale
@@ -106,3 +106,17 @@ class BasketService:
     
     def accept_regeneration(self, regeneration_id, user_id):
         return self.regenerations.accept_regeneration(regeneration_id, user_id)
+    
+    def reject_regeneration(self, regeneration_id, user_id):
+        return self.regenerations.reject_regeneration(regeneration_id, user_id)
+    
+    def get_regeneration_for_basket(self, basket_id, user_id):
+        basket = self.baskets.get(basket_id, user_id)
+        regeneration_obj = self.regenerations.get_pending_regeneration_for_basket(basket_id, user_id)
+        if regeneration_obj:
+            return {
+                "id": regeneration_obj.id,
+                "name": regeneration_obj.regenerated_name,
+                "description": regeneration_obj.regenerated_description,
+                "holdings": regeneration_obj.regenerated_holdings_list
+            }

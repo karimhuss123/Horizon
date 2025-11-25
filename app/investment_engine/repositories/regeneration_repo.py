@@ -26,7 +26,10 @@ class RegenerationRepo:
     def get_regeneration_by_id(self, id: int, user_id: int):
         regeneration = (
             self.db.query(Regeneration)
-            .filter(Regeneration.id == id)
+            .filter(
+                Regeneration.id == id,
+                Regeneration.user_id == user_id
+            )
             .first()
         )
         if regeneration is None:
@@ -55,5 +58,24 @@ class RegenerationRepo:
         self.db.commit()
         self.db.refresh(regeneration_obj)
         return regeneration_obj
-        
+    
+    def reject_regeneration(self, id, user_id):
+        regeneration_obj = self.get_regeneration_by_id(id, user_id)
+        regeneration_obj.is_accepted = False
+        self.db.commit()
+        self.db.refresh(regeneration_obj)
+        return regeneration_obj
+    
+    def get_pending_regeneration_for_basket(self, basket_id, user_id):
+        regeneration = (
+            self.db.query(Regeneration)
+            .filter(
+                Regeneration.basket_id == basket_id,
+                Regeneration.user_id == user_id,
+                Regeneration.is_accepted.is_(None)
+            ).first()
+        )
+        if regeneration is None:
+            raise HTTPException(status_code=404, detail="Regeneration not found.")
+        return regeneration
         
