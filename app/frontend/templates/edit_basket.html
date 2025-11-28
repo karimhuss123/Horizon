@@ -52,11 +52,9 @@
 
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-[1.4fr_1fr]">
                 <!-- Basket editor (Left Panel) -->
-                <div
-                    id="basketCard"
-                    class="rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-2xl backdrop-blur"
-                    data-basket-id="{{ basket.id }}"
-                >
+                <div id="basketCard"
+                    class="rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-2xl backdrop-blur h-fit"
+                    data-basket-id="{{ basket.id }}">
                     <!-- Meta -->
                     <div class="flex items-start justify-between gap-4">
                         <div class="w-full max-w-3xl space-y-3">
@@ -120,6 +118,13 @@
 
                         <div class="overflow-x-auto rounded-2xl border border-white/10 bg-slate-950/60">
                             <table class="min-w-full text-sm" id="holdingsTable">
+                                <colgroup>
+                                    <col class="w-28">      <!-- Ticker -->
+                                    <col class="w-52">      <!-- Name -->
+                                    <col class="w-24">      <!-- Weight -->
+                                    <col class="w-[500px]"> <!-- Rationale -->
+                                    <col class="w-20">      <!-- Actions -->
+                                </colgroup>
                                 <thead class="bg-slate-900/80">
                                     <tr>
                                         <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400">
@@ -247,7 +252,7 @@
                     </div>
 
                     <!-- AI Suggestions -->
-                    <div class="rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-2xl backdrop-blur space-y-4">
+                    <div class="rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-2xl backdrop-blur space-y-4 h-fit">
                         <h2 class="text-lg font-semibold text-white">Today's AI Suggestions</h2>
                         <div id="suggestionsContainer" class="space-y-2">
                             <!-- Dynamically render suggestions here -->
@@ -704,7 +709,7 @@
         if (!card) return;
 
         card.className = '';
-        card.classList.add('mt-4', 'rounded-3xl', 'border', 'border-white/10', 'bg-slate-900/70', 'p-6', 'shadow-2xl', 'backdrop-blur');
+        card.classList.add('mt-4', 'rounded-3xl', 'border', 'border-white/10', 'bg-slate-900/70', 'p-6', 'shadow-2xl', 'backdrop-blur', 'h-fit');
 
         const hasDesc = Boolean(suggested_basket.description && suggested_basket.description.trim());
         const holdings = Array.isArray(suggested_basket.holdings) ? suggested_basket.holdings : [];

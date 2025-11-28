@@ -3,6 +3,8 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from fastapi.responses import HTMLResponse
 from typing import List
+from app.core.limiter import limiter
+from app.core.config import settings
 from app.db.db import get_db
 from app.investment_engine.services.basket_service import BasketService
 from app.investment_engine.services.ai_service import AIService
@@ -29,18 +31,15 @@ router = APIRouter(prefix="/baskets", tags=["baskets"])
 templates = Jinja2Templates(directory="app/frontend/templates")
 
 @router.post("/generate", response_model=JobResponse, status_code=status.HTTP_201_CREATED)
-async def generate(payload: BasketGenerateRequest, db: Session = Depends(get_db), current_user = Depends(require_login)):
+@limiter.limit(settings.RATE_LIMIT_BASKETS_GENERATE)
+async def generate(request: Request, payload: BasketGenerateRequest, db: Session = Depends(get_db), current_user = Depends(require_login)):
     job_svc = JobService(db)
     job = job_svc.enqueue_basket_generation(payload, current_user.id)
     return job
 
-# TO UPDATE: Make it start a job, like basket generation, and return a job
 @router.post('/regenerate', response_model=JobResponse, status_code=status.HTTP_200_OK)
-async def regenerate(payload: BasketRegenerateRequest, db: Session = Depends(get_db), current_user = Depends(require_login)):
-    # ai_svc = AIService(OpenAIClient())
-    # basket_svc = BasketService(db, ai_svc)
-    # basket_data = basket_svc.regenerate_basket(payload, current_user.id)
-    print("REGENERATION JOB STARTING")
+@limiter.limit(settings.RATE_LIMIT_BASKETS_REGENERATE)
+async def regenerate(request: Request, payload: BasketRegenerateRequest, db: Session = Depends(get_db), current_user = Depends(require_login)):
     job_svc = JobService(db)
     job = job_svc.enqueue_basket_regeneration(payload, current_user.id)
     return job
@@ -77,7 +76,8 @@ def edit_page(request: Request, basket_id: str, db: Session = Depends(get_db), c
     return templates.TemplateResponse("edit_basket.html", {"request": request, "basket": basket})
 
 @router.post("/edit", response_model=BasketResponse, status_code=status.HTTP_200_OK)
-def save_edit(payload: BasketUpdateRequest, db: Session = Depends(get_db), current_user = Depends(require_login)):
+@limiter.limit(settings.RATE_LIMIT_BASKETS_EDIT)
+def save_edit(request: Request, payload: BasketUpdateRequest, db: Session = Depends(get_db), current_user = Depends(require_login)):
     ai_svc = AIService(OpenAIClient())
     basket_svc = BasketService(db, ai_svc)
     basket_obj = basket_svc.edit_basket(basket=payload, user_id=current_user.id)
@@ -85,7 +85,8 @@ def save_edit(payload: BasketUpdateRequest, db: Session = Depends(get_db), curre
     return basket
 
 @router.post("/generate-suggestions", response_model=JobResponse, status_code=status.HTTP_200_OK)
-def generate_basket_suggestions(payload: BasketIdRequest, db: Session = Depends(get_db), current_user = Depends(require_login)):
+@limiter.limit(settings.RATE_LIMIT_BASKETS_GENERATE_SUGGESTIONS)
+def generate_basket_suggestions(request: Request, payload: BasketIdRequest, db: Session = Depends(get_db), current_user = Depends(require_login)):
     job_svc = JobService(db)
     job = job_svc.enqueue_suggestions_generation(payload, current_user.id)
     return job

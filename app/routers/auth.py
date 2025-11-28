@@ -9,24 +9,25 @@ from app.auth.utils.auth_utils import create_access_token
 from app.auth.dependencies import require_login, require_anonymous
 from app.core.config import settings
 from app.core.errors.messages import messages
+from app.core.limiter import limiter
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 templates = Jinja2Templates(directory="app/frontend/templates")
-
-# ADD RATE LIMITING
 
 @router.get("/login", response_class=HTMLResponse)
 def login(request: Request, _ = Depends(require_anonymous)):
     return templates.TemplateResponse("auth/login.html", {"request": request})
 
 @router.post("/code/request")
-async def request_login_code(payload: LoginRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db), _ = Depends(require_anonymous)):
+@limiter.limit(settings.RATE_LIMIT_AUTH_CODE_REQUEST)
+async def request_login_code(request: Request, payload: LoginRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db), _ = Depends(require_anonymous)):
     auth_svc = AuthService(db)
     auth_svc.process_code_request(payload.email, background_tasks)
     return {"detail": {"message": messages.auth_resend_code_success}}
 
 @router.post("/code/verify")
-async def verify_login_code(payload: CodeVerifyRequest, db: Session = Depends(get_db), _ = Depends(require_anonymous)):
+@limiter.limit(settings.RATE_LIMIT_AUTH_CODE_VERIFY)
+async def verify_login_code(request: Request, payload: CodeVerifyRequest, db: Session = Depends(get_db), _ = Depends(require_anonymous)):
     auth_svc = AuthService(db)
     user = auth_svc.verify_code(payload.email, payload.code)
     if not user:

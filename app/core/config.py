@@ -29,19 +29,19 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRY_DAYS: int = 5
     
     LOGIN_CODE_DAILY_LIMIT: int = 10
-    BASKET_GENERATION_DAILY_LIMIT: int = 20
-    BASKET_REGENERATION_DAILY_LIMIT: int = 40
+    BASKET_GENERATION_DAILY_LIMIT: int = 10
+    BASKET_REGENERATION_DAILY_LIMIT: int = 20
     
     REDIS_URL: str
     
-    MAIL_USERNAME: EmailStr
-    MAIL_PASSWORD: str
-    MAIL_FROM: EmailStr
-    MAIL_SERVER: str = "smtp.gmail.com"
-    MAIL_PORT: int = 587
-    MAIL_STARTTLS: bool = True
-    MAIL_SSL_TLS: bool = False
-    SSL_CERT_FILE: str
+    # --- Rate limits ---
+    RATE_LIMIT_AUTH_CODE_REQUEST: str = "5/minute;60/hour"
+    RATE_LIMIT_AUTH_CODE_VERIFY: str = "20/minute;100/hour"
+    
+    RATE_LIMIT_BASKETS_GENERATE: str = "5/minute;15/hour"
+    RATE_LIMIT_BASKETS_REGENERATE: str = "6/minute;30/hour"
+    RATE_LIMIT_BASKETS_EDIT: str = "5/minute;40/hour;120/day"
+    RATE_LIMIT_BASKETS_GENERATE_SUGGESTIONS: str = "10/minute;15/hour;30/day"
 
     @property
     def TEMPERATURES(self) -> dict:
@@ -60,17 +60,3 @@ class Settings(BaseSettings):
         env_file = ".env"
 
 settings = Settings()
-
-mail_config = ConnectionConfig(
-    MAIL_USERNAME=settings.MAIL_USERNAME,
-    MAIL_PASSWORD=settings.MAIL_PASSWORD,
-    MAIL_FROM=settings.MAIL_FROM,
-    MAIL_SERVER=settings.MAIL_SERVER,
-    MAIL_PORT=settings.MAIL_PORT,
-    MAIL_STARTTLS=settings.MAIL_STARTTLS,
-    MAIL_SSL_TLS=settings.MAIL_SSL_TLS,
-    USE_CREDENTIALS=True,
-    VALIDATE_CERTS=True
-)
-
-os.environ["SSL_CERT_FILE"] = settings.SSL_CERT_FILE
