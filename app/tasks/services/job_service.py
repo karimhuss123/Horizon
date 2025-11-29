@@ -21,7 +21,6 @@ class JobService:
         return {"job_id": job.id, "status": job.status, "error_message": job.error_message}
     
     def enqueue_basket_regeneration(self, payload, user_id):
-        print("BASKET ID", payload.basket_id)
         if self.jobs.get_in_progress_basket_regeneration_job(payload.basket_id, user_id):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"message": messages.jobs_basket_regeneration_in_progress})
         normalized_payload = self.normalize_payload(payload)

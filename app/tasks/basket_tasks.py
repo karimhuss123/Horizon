@@ -38,9 +38,7 @@ def run_basket_regeneration(job_id, user_id):
         db = SessionLocal()
         jobs = JobRepo(db)
         job = jobs.get_job_by_id(job_id, user_id)
-        print("HERE")
         payload = json.loads(job.payload)
-        print("PAYLOAD:", payload)
         ai_svc = AIService(OpenAIClient())
         basket_svc = BasketService(db, ai_svc)
         try:
