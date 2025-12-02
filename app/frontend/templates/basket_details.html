@@ -207,7 +207,7 @@
         const res = await fetch(`/baskets/accept`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ basketId })
+            body: JSON.stringify({ basket_id: basketId })
         });
         if (!res.ok) throw new Error(`Accept failed (${res.status})`);
             window.location.href = `/`;
