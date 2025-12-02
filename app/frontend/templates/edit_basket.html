@@ -39,9 +39,9 @@
             <!-- Top row: back + title -->
             <div class="grid grid-cols-3 items-center">
                 <div class="text-left">
-                    <a href="/" class="inline-flex items-center text-xs font-medium text-slate-300 hover:text-white">
+                    <a href="/baskets/details?basket_id={{ basket.id }}" class="inline-flex items-center text-xs font-medium text-slate-300 hover:text-white">
                         <span class="mr-1">&larr;</span>
-                        Back
+                        Back to Basket Details
                     </a>
                 </div>
                 <div class="text-center">
@@ -285,6 +285,8 @@
     const statusPill = document.getElementById('statusPill');
     const newBasketCard = document.getElementById('newBasketCard');
 
+    
+
     function sumWeights() {
         let sum = 0;
         tbody.querySelectorAll('tr').forEach(tr => {
@@ -465,7 +467,7 @@
                 }
                 return
             };
-            window.location.href = `/`;
+            window.location.href = `/baskets/details?basket_id=${basketId}`;
         } catch (e) {
             console.error(e);
             actionStatus.textContent = 'Saving failed.';

@@ -21,6 +21,7 @@ from app.investment_engine.schemas.basket_schemas import (
     RejectRegenerationRequest
 )
 from app.investment_engine.schemas.basket_suggestion_schemas import BasketSuggestionItem
+from app.market_data.services.price_service import PriceService
 from app.clients.openai_client import OpenAIClient
 from app.auth.dependencies import require_login
 from app.tasks.services.job_service import JobService
@@ -113,3 +114,10 @@ def reject_regeneration(payload: RejectRegenerationRequest, db: Session = Depend
     basket_svc = BasketService(db)
     basket_svc.reject_regeneration(payload.id, current_user.id)
     return
+
+@router.get("/performance", status_code=status.HTTP_200_OK)
+def get_performance(basket_id: str, db: Session = Depends(get_db), current_user = Depends(require_login)):
+    basket_svc = BasketService(db)
+    price_svc = PriceService(db)
+    price_svc.process_prices(basket_id=basket_id, user_id=current_user.id) # get most recent prices
+    return basket_svc.get_performance(basket_id=basket_id, user_id=current_user.id)

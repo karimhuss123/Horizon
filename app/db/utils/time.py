@@ -44,3 +44,15 @@ def day_bounds_from_date(d: date) -> tuple[datetime, datetime]:
     day_start = datetime(d.year, d.month, d.day, tzinfo=EASTERN)
     day_end = add_to_datetime(day_start, days=1)
     return day_start, day_end
+
+def gap_in_days(start: date | datetime, end: date | datetime) -> int:
+    if isinstance(start, datetime) and isinstance(end, datetime):
+        if start.tzinfo is None or end.tzinfo is None:
+            raise ValueError("Both datetime objects must be timezone-aware")
+        start = start.date()
+        end = end.date()
+    elif isinstance(start, date) and isinstance(end, date):
+        pass
+    else:
+        raise TypeError("start and end must both be date or datetime objects")
+    return (end - start).days

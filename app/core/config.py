@@ -42,6 +42,8 @@ class Settings(BaseSettings):
     RATE_LIMIT_BASKETS_REGENERATE: str = "6/minute;30/hour"
     RATE_LIMIT_BASKETS_EDIT: str = "5/minute;40/hour;120/day"
     RATE_LIMIT_BASKETS_GENERATE_SUGGESTIONS: str = "10/minute;15/hour;30/day"
+    
+    CHART_INITIAL_VALUE: int = 100
 
     @property
     def TEMPERATURES(self) -> dict:

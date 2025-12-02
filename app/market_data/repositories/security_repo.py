@@ -17,3 +17,12 @@ class SecurityRepo:
         stmt = stmt.order_by(Security.ticker)
         rows = self.db.execute(stmt).mappings().all()
         return rows
+    
+    def get_security_id_for_ticker(self, ticker):
+        security_obj = (
+            self.db.query(Security)
+            .filter(Security.ticker == ticker)
+        ).first()
+        if not security_obj:
+            return RuntimeError(f'Ticker "{ticker}" does not exist.')
+        return security_obj.id

@@ -1,5 +1,5 @@
 from sqlalchemy import (
-    Column, String, Float, Enum, ForeignKey, DateTime, Integer, ARRAY, Boolean, func, UniqueConstraint
+    Column, String, Float, Enum, ForeignKey, DateTime, Integer, ARRAY, Boolean, func, UniqueConstraint, Date
 )
 from sqlalchemy.orm import relationship
 import enum
@@ -146,6 +146,7 @@ class Security(Base):
     
     news = relationship("News", back_populates="security", cascade="all, delete-orphan", single_parent=True)
     holdings = relationship("Holding", back_populates="security")
+    prices = relationship("Price", back_populates="security")
 
 class News(Base):
     __tablename__ = "news"
@@ -186,3 +187,17 @@ class Job(Base):
     
     created_at = Column(DateTime(timezone=True), default=current_datetime_et)
     updated_at = Column(DateTime(timezone=True), onupdate=current_datetime_et)
+
+class Price(Base):
+    __tablename__ = "prices"
+
+    id = Column(Integer, primary_key=True)
+    security_id = Column(Integer, ForeignKey("securities.id"), nullable=False)
+    date = Column(Date, nullable=False)
+    close = Column(Float, nullable=False)
+
+    security = relationship("Security", back_populates="prices")
+
+    __table_args__ = (
+        UniqueConstraint("security_id", "date"),  # prevents duplicates
+    )
