@@ -147,6 +147,7 @@ class Security(Base):
     news = relationship("News", back_populates="security", cascade="all, delete-orphan", single_parent=True)
     holdings = relationship("Holding", back_populates="security")
     prices = relationship("Price", back_populates="security")
+    fundamentals = relationship("Fundamental", back_populates="security")
 
 class News(Base):
     __tablename__ = "news"
@@ -167,6 +168,7 @@ class JobType(enum.Enum):
     BASKET_GENERATION = "basket_generation"
     BASKET_REGENERATION = "basket_regeneration"
     SUGGESTIONS_GENERATION = "suggestions_generation"
+    FUNDAMENTALS_PROCESSING = "fundamentals_processing"
 
 class JobStatus(enum.Enum):
     PENDING = "pending"
@@ -201,3 +203,22 @@ class Price(Base):
     __table_args__ = (
         UniqueConstraint("security_id", "date"),  # prevents duplicates
     )
+
+class Fundamental(Base):
+    __tablename__ = "fundamentals"
+    
+    id = Column(Integer, primary_key=True)
+    security_id = Column(Integer, ForeignKey("securities.id"), nullable=False)
+    as_of = Column(Date, nullable=False)
+    
+    open = Column(Float)
+    day_high = Column(Float)
+    day_low = Column(Float)
+    market_cap = Column(Float) # MAKE USD
+    pe_ratio = Column(Float)
+    fifty_two_week_high = Column(Float)
+    fifty_two_week_low = Column(Float)
+    dividend_rate = Column(Float)
+    dividend_yield = Column(Float)
+    
+    security = relationship("Security", back_populates="fundamentals")

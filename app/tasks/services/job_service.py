@@ -4,6 +4,7 @@ from fastapi import HTTPException, status
 from app.tasks.repositories.job_repo import JobRepo
 from app.investment_engine.repositories.basket_repo import BasketRepo
 from app.tasks.basket_tasks import run_basket_generation, run_basket_regeneration, run_suggestions_generation
+from app.tasks.fundamentals_tasks import run_fundamentals_processing
 from app.core.errors.messages import messages
 
 class JobService:
@@ -26,6 +27,14 @@ class JobService:
         normalized_payload = self.normalize_payload(payload)
         job = self.jobs.create_regeneration_job(normalized_payload, payload.basket_id, user_id)
         run_basket_regeneration.delay(job.id, user_id)
+        return {"job_id": job.id, "status": job.status, "error_message": job.error_message}
+    
+    def enqueue_fundamentals_processing(self, outdated_securities, basket_id, user_id):
+        basket = self.baskets.get(basket_id, user_id) # Verify basket validity
+        if self.jobs.get_in_progress_fundamentals_job(basket_id, user_id):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"message": messages.jobs_fundamentals_in_progress})
+        job = self.jobs.create_fundamentals_job(basket_id, user_id)
+        run_fundamentals_processing.delay(job.id, user_id, outdated_securities)
         return {"job_id": job.id, "status": job.status, "error_message": job.error_message}
 
     def get_job_by_id(self, id, user_id):

@@ -7,6 +7,7 @@ from app.investment_engine.repositories.regeneration_repo import RegenerationRep
 from app.investment_engine.repositories.basket_suggestion_repo import BasketSuggestionRepo
 from app.investment_engine.utils.fingerprint import compute_basket_fingerprint
 from app.market_data.services.price_service import PriceService
+from app.market_data.services.fundamentals_service import FundamentalsService
 from app.market_data.repositories.security_repo import SecurityRepo
 from app.core.errors.messages import messages
 from app.core.config import settings
@@ -85,6 +86,13 @@ class BasketService:
     
     def get_basket(self, id, user_id):
         return self.baskets.get(id, user_id)
+    
+    def get_basket_with_fundamentals(self, id, user_id):
+        basket_obj = self.baskets.get(id, user_id)
+        fund_svc = FundamentalsService(self.db)
+        security_ids = [h.security_id for h in basket_obj.holdings if h.security_id]
+        fundamentals_map, outdated_securities = fund_svc.get_fundamentals(list(set(security_ids)))
+        return basket_obj, fundamentals_map, outdated_securities
     
     def accept_draft(self, id, user_id):
         return self.baskets.accept_draft(id, user_id)

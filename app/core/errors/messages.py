@@ -16,6 +16,7 @@ class ErrorMessages:
         self.jobs_basket_generation_in_progress = "You already have a basket generation in progress. Please wait until it is complete before submitting a new prompt."
         self.jobs_basket_regeneration_in_progress = "You already have a basket regeneration in progress. Please wait until it is complete before submitting a new prompt."
         self.jobs_suggestions_in_progress = "Suggestions generation is in progress. Please wait."
+        self.jobs_fundamentals_in_progress = "Fundamentals processing is in progress. Please wait."
         self.job_not_found = "Job not found."
 
 messages = ErrorMessages()

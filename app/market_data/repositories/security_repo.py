@@ -9,6 +9,14 @@ class SecurityRepo:
     def get_security(self, id):
         return self.db.query(Security).filter_by(id=id).first()
     
+    def get_securities(self, ids):
+        unique_ids = list(set(ids))
+        return (
+            self.db.query(Security)
+            .filter(Security.id.in_(unique_ids))
+            .all()
+        )
+    
     def get_tickers_with_names(self, query):
         stmt = select(Security.id, Security.ticker, Security.name)
         if query:

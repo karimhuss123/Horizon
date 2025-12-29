@@ -5,6 +5,7 @@ from app.db.utils.time import get_today_date, gap_in_days
 from app.investment_engine.repositories.basket_repo import BasketRepo
 from app.market_data.repositories.price_repo import PriceRepo
 from app.market_data.repositories.security_repo import SecurityRepo
+from app.market_data.utils.securities import extract_tickers_data
 
 class PriceService:
     def __init__(self, db: Session):
@@ -14,7 +15,7 @@ class PriceService:
         self.baskets = BasketRepo(db)
     
     def process_prices(self, basket_id, user_id):
-        tickers_data = self.extract_tickers_data(user_id=user_id, basket_id=basket_id)
+        tickers_data = extract_tickers_data(user_id=user_id, basket_id=basket_id, basket_repo=self.baskets, securities_repo=self.securities)
         tickers_list = list(tickers_data.keys())
         period = self.get_smallest_period(tickers_data.values())
         if period:
@@ -65,7 +66,7 @@ class PriceService:
         return self.determine_period_from_gap(max_gap)
 
     def determine_period_from_gap(self, gap_days):
-        if gap_days < 1:
+        if gap_days <= 1:
             return
         if gap_days <= 6:
             return "5d"
@@ -76,10 +77,3 @@ class PriceService:
         if gap_days <= 180:
             return "6mo"
         return "1y"
-    
-    def extract_tickers_data(self, user_id, basket_id=None, basket_obj=None):
-        if not any([basket_id, basket_obj]):
-            return
-        if basket_id and not basket_obj:
-            basket_obj = self.baskets.get(basket_id, user_id)
-        return {holding.ticker: self.securities.get_security_id_for_ticker(holding.ticker) for holding in basket_obj.holdings}

@@ -122,19 +122,62 @@
                             </thead>
                             <tbody class="divide-y divide-slate-800/80">
                             {% for h in basket.holdings %}
-                                <tr class="hover:bg-slate-900/70">
-                                <td class="px-4 py-2 align-top text-sm font-medium text-slate-100">
-                                    {{ h.ticker or '—' }}
-                                </td>
-                                <td class="px-4 py-2 align-top text-sm text-slate-200">
-                                    {{ h.name or '—' }}
-                                </td>
-                                <td class="px-4 py-2 align-top text-right text-sm tabular-nums text-slate-200">
-                                    {{ "%.2f"|format(h.weight_pct or 0) }}%
-                                </td>
-                                <td class="px-4 py-2 align-top text-sm text-slate-300">
-                                    {{ h.rationale or '' }}
-                                </td>
+                                <tr class="cursor-pointer hover:bg-slate-900/70" onclick="toggleRow('{{ h.ticker }}')">
+                                    <td class="px-4 py-2 align-top text-sm font-medium text-slate-100">
+                                        {{ h.ticker or '—' }}
+                                    </td>
+                                    <td class="px-4 py-2 align-top text-sm text-slate-200">
+                                        {{ h.name or '—' }}
+                                    </td>
+                                    <td class="px-4 py-2 align-top text-right text-sm tabular-nums text-slate-200">
+                                        {{ "%.2f"|format(h.weight_pct or 0) }}%
+                                    </td>
+                                    <td class="px-4 py-2 align-top text-sm text-slate-300">
+                                        {{ h.rationale or '' }}
+                                    </td>
+                                </tr>
+                                {% set f = fundamentals_map.get(h.security_id) %}
+                                <tr id="details-{{ h.ticker }}" class="hidden bg-slate-950/60">
+                                    <td colspan="4" class="px-6 py-4">
+                                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs">
+                                            <div>
+                                                <span class="text-slate-400">Open</span>
+                                                <div class="text-slate-200 font-medium">${{ f.open if f and f.open else '—' }}</div>
+                                            </div>
+                                            <div>
+                                                <span class="text-slate-400">High</span>
+                                                <div class="text-slate-200 font-medium">${{ f.day_high if f and f.day_high else '—' }}</div>
+                                            </div>
+                                            <div>
+                                                <span class="text-slate-400">Low</span>
+                                                <div class="text-slate-200 font-medium">${{ f.day_low if f and f.day_low else '—' }}</div>
+                                            </div>
+                                            <div>
+                                                <span class="text-slate-400">Mkt Cap</span>
+                                                <div class="text-slate-200 font-medium">${{ f.market_cap if f and f.market_cap else '—' }}</div>
+                                            </div>
+                                            <div>
+                                                <span class="text-slate-400">P/E ratio</span>
+                                                <div class="text-slate-200 font-medium">{{ f.pe_ratio if f and f.pe_ratio else '—' }}</div>
+                                            </div>
+                                            <div>
+                                                <span class="text-slate-400">52W high</span>
+                                                <div class="text-slate-200 font-medium">${{ f.fifty_two_week_high if f and f.fifty_two_week_high else '—' }}</div>
+                                            </div>
+                                            <div>
+                                                <span class="text-slate-400">52W low</span>
+                                                <div class="text-slate-200 font-medium">${{ f.fifty_two_week_low if f and f.fifty_two_week_low else '—' }}</div>
+                                            </div>
+                                            <div>
+                                                <span class="text-slate-400">Dividend rate</span>
+                                                <div class="text-slate-200 font-medium">${{ f.dividend_rate if f and f.dividend_rate else '—' }}</div>
+                                            </div>
+                                            <div>
+                                                <span class="text-slate-400">Dividend yield</span>
+                                                <div class="text-slate-200 font-medium">{{ f.dividend_yield*100 if f and f.dividend_yield else '—' }}%</div>
+                                            </div>
+                                        </div>
+                                    </td>
                                 </tr>
                             {% endfor %}
                             </tbody>
@@ -240,6 +283,11 @@
     }
     deleteBtn.addEventListener('click', () => deleteFn());
     editBtn.addEventListener('click', () => (window.location.href = `/baskets/edit?basket_id=${basketId}`));
+
+    function toggleRow(id) {
+        const row = document.getElementById(`details-${id}`);
+        row.classList.toggle("hidden");
+    }
 </script>
 
 <!-- SUGGESTIONS LOGIC (FETCHING, POLLING, ETC.) -->

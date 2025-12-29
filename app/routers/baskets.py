@@ -53,9 +53,12 @@ async def get_all(db: Session = Depends(get_db), current_user = Depends(require_
 @router.get("/details", response_class=HTMLResponse, status_code=status.HTTP_200_OK)
 async def details(request: Request, basket_id: str, db: Session = Depends(get_db), current_user = Depends(require_login)):
     basket_svc = BasketService(db)
-    basket_obj = basket_svc.get_basket(id=basket_id, user_id=current_user.id)
+    job_svc = JobService(db)
+    basket_obj, fundamentals_map, outdated_securities = basket_svc.get_basket_with_fundamentals(id=basket_id, user_id=current_user.id)
+    if outdated_securities:
+        job_svc.enqueue_fundamentals_processing(outdated_securities, basket_id, current_user.id)
     basket = BasketResponse.model_validate(basket_obj)
-    return templates.TemplateResponse("basket_details.html", {"request": request, "basket": basket})
+    return templates.TemplateResponse("basket_details.html", {"request": request, "basket": basket, "fundamentals_map": fundamentals_map})
 
 @router.post("/accept", response_model=BasketResponse, status_code=status.HTTP_200_OK)
 async def accept(payload: BasketIdRequest, db: Session = Depends(get_db), current_user = Depends(require_login)):

@@ -8,3 +8,6 @@ class SecurityService:
     
     def get_tickers_with_names(self, query):
         return self.securities.get_tickers_with_names(query)
+    
+    def get_securities(self, ids):
+        return self.securities.get_securities(ids)

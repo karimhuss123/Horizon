@@ -55,7 +55,8 @@ class Settings(BaseSettings):
         }
     
     CELERY_TASK_FILES : list = [
-        "app.tasks.basket_tasks"
+        "app.tasks.basket_tasks",
+        "app.tasks.fundamentals_tasks"
     ]
     
     class Config:

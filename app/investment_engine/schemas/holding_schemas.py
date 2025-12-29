@@ -12,6 +12,7 @@ class HoldingIn(BaseModel):
 
 class HoldingOut(BaseModel):
     model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+    security_id: Optional[int]
     ticker: str
     name: str
     weight_pct: float = Field(..., ge=0.01, le=100)
