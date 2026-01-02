@@ -32,7 +32,8 @@ class JobService:
     def enqueue_fundamentals_processing(self, outdated_securities, basket_id, user_id):
         basket = self.baskets.get(basket_id, user_id) # Verify basket validity
         if self.jobs.get_in_progress_fundamentals_job(basket_id, user_id):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"message": messages.jobs_fundamentals_in_progress})
+            # raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"message": messages.jobs_fundamentals_in_progress})
+            return
         job = self.jobs.create_fundamentals_job(basket_id, user_id)
         run_fundamentals_processing.delay(job.id, user_id, outdated_securities)
         return {"job_id": job.id, "status": job.status, "error_message": job.error_message}
