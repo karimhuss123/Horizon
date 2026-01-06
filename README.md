@@ -1,4 +1,4 @@
-# Horizon [https://horizonai.ca/](https://horizonai.ca/)
+# Horizon ([https://horizonai.ca/](https://horizonai.ca/))
 An AI-powered investing platform that helps users build, customize, and evolve personalized stock baskets from simple ideas.
 Built with Python and FastAPI, Horizon enables users to create theme-based portfolios, receive continuous AI-driven insights, and explore markets through intelligent, transparent tooling.
 
