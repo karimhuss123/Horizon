@@ -55,9 +55,6 @@ Horizon is built around transparency, control, and extensibility, combining AI-d
   - `tasks/` — Celery background jobs for AI processing and data pipelines  
   - `main.py` — FastAPI application entry point 
 
-## 🚀 Deployment
-- **Platform:** Render (API, workers, and services)
-
 <!-- # Horizon
 
 ## Run from top level (Horizon folder, above "app")
